@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>View List</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="title">List</h1>
+        <div class="controls">
+          <button id="exportPdfBtn" class="btn" type="button">Export PDF</button>
+          <a id="editLink" class="btn" href="#">Edit</a>
+          <a id="backBtn" class="btn" href="index.html">Back</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="hint" id="meta"></div>
+        <div id="printArea">
+          <div class="list-header">
+            <h2 class="list-title" id="listTitle">List</h2>
+          </div>
+          <ul id="items" class="items"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="assets/js/view.js"></script>
+</body>
+</html>
+
+

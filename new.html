@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create List</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="title">New List</h1>
+        <div class="controls">
+          <a class="btn" href="index.html">Back</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <input id="itemInput" class="input" type="text" placeholder="Type item and press Enter" aria-label="New list item" autocomplete="off">
+        <div class="hint">Press Enter to add. When finished, click "Ukončit doklad".</div>
+
+        <div id="printArea">
+          <div class="list-header">
+            <h2 class="list-title">Current List</h2>
+          </div>
+          <ul id="items" class="items"></ul>
+        </div>
+
+        <div style="margin-top: .75rem; display:flex; gap:.5rem;">
+          <button id="finishBtn" class="btn btn-primary">Ukončit doklad</button>
+        </div>
+        <div id="metaModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center;">
+          <div class="card" style="width: 100%; max-width: 420px;">
+            <div class="card-header">
+              <h2 class="title">Finish List</h2>
+            </div>
+            <div class="card-body">
+              <input id="modalDriverName" class="input" type="text" placeholder="Driver name" autofocus>
+              <input id="modalLicensePlate" class="input" type="text" placeholder="SPZ" style="margin-top:.5rem;">
+              <div style="display:flex; gap:.5rem; margin-top:.75rem; justify-content: flex-end;">
+                <button id="modalCancel" class="btn">Cancel</button>
+                <button id="modalSubmit" class="btn btn-primary">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/new.js"></script>
+</body>
+</html>
+
+

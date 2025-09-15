@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simple List + PDF Export</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <div class="card-header">
+        <h1 class="title">Lists</h1>
+        <div class="controls">
+          <a class="btn btn-primary" href="new.html">New List</a>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="listsEmpty" class="empty" style="display:none">No lists yet. Create a new one.</div>
+        <div class="table-responsive">
+          <table class="table" style="width:100%; border-collapse: collapse;">
+            <thead>
+              <tr>
+                <th id="th-id" style="cursor:pointer; text-align:left; padding: .5rem;">ID</th>
+                <th id="th-driver" style="cursor:pointer; text-align:left; padding: .5rem;">Driver</th>
+                <th id="th-spz" style="cursor:pointer; text-align:left; padding: .5rem;">SPZ</th>
+                <th id="th-count" style="cursor:pointer; text-align:left; padding: .5rem;"># Items</th>
+                <th id="th-datetime" style="cursor:pointer; text-align:left; padding: .5rem;">Datetime</th>
+              </tr>
+            </thead>
+            <tbody id="listsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="assets/js/index.js"></script>
+</body>
+</html>
+
+
