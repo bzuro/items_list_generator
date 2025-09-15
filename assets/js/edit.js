@@ -14,7 +14,144 @@
   const licensePlateInput = document.getElementById('licensePlate');
   const printAreaHeader = document.querySelector('#printArea .list-header');
 
+  // Autocomplete cache
+  let driversCache = [];
+  let licensePlatesCache = [];
+
   let items = [];
+
+  // Load autocomplete data
+  async function loadAutocompleteData() {
+    try {
+      const [driversRes, licensePlatesRes] = await Promise.all([
+        fetch('api/drivers.php'),
+        fetch('api/license_plates.php')
+      ]);
+      
+      if (driversRes.ok) {
+        driversCache = await driversRes.json();
+      }
+      
+      if (licensePlatesRes.ok) {
+        licensePlatesCache = await licensePlatesRes.json();
+      }
+    } catch (e) {
+      console.log('Failed to load autocomplete data:', e);
+    }
+  }
+
+  // Simple autocomplete implementation
+  function setupAutocomplete(input, suggestions) {
+    let currentFocus = -1;
+    let autocompleteDiv = null;
+
+    function closeAutoComplete() {
+      if (autocompleteDiv) {
+        autocompleteDiv.remove();
+        autocompleteDiv = null;
+      }
+      currentFocus = -1;
+    }
+
+    function showSuggestions(value) {
+      closeAutoComplete();
+      if (!value) return;
+
+      const filtered = suggestions.filter(item => 
+        item.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 8); // Limit to 8 suggestions
+
+      if (filtered.length === 0) return;
+
+      autocompleteDiv = document.createElement('div');
+      autocompleteDiv.className = 'autocomplete-items';
+      autocompleteDiv.style.cssText = `
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #d7dbe6;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        z-index: 1000;
+        max-height: 200px;
+        overflow-y: auto;
+      `;
+
+      filtered.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.style.cssText = `
+          padding: 0.75rem 0.9rem;
+          cursor: pointer;
+          border-bottom: 1px solid #eef0f5;
+        `;
+        itemDiv.innerHTML = item.replace(new RegExp(value, 'gi'), `<strong>$&</strong>`);
+        
+        itemDiv.addEventListener('mouseenter', () => {
+          currentFocus = index;
+          updateActiveItem();
+        });
+        
+        itemDiv.addEventListener('click', () => {
+          input.value = item;
+          closeAutoComplete();
+        });
+        
+        autocompleteDiv.appendChild(itemDiv);
+      });
+
+      // Position relative to input
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'relative';
+      wrapper.style.display = 'inline-block';
+      wrapper.style.width = '100%';
+      
+      input.parentNode.insertBefore(wrapper, input);
+      wrapper.appendChild(input);
+      wrapper.appendChild(autocompleteDiv);
+    }
+
+    function updateActiveItem() {
+      if (!autocompleteDiv) return;
+      const items = autocompleteDiv.querySelectorAll('div');
+      items.forEach((item, index) => {
+        item.style.backgroundColor = index === currentFocus ? '#f0f4ff' : '#fff';
+      });
+    }
+
+    input.addEventListener('input', (e) => {
+      showSuggestions(e.target.value);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (!autocompleteDiv) return;
+      const items = autocompleteDiv.querySelectorAll('div');
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        currentFocus = Math.min(currentFocus + 1, items.length - 1);
+        updateActiveItem();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        currentFocus = Math.max(currentFocus - 1, -1);
+        updateActiveItem();
+      } else if (e.key === 'Enter' && currentFocus >= 0) {
+        e.preventDefault();
+        items[currentFocus].click();
+      } else if (e.key === 'Escape') {
+        closeAutoComplete();
+      }
+    });
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && (!autocompleteDiv || !autocompleteDiv.contains(e.target))) {
+        closeAutoComplete();
+      }
+    });
+  }
 
   function render() {
     list.innerHTML = '';
@@ -152,31 +289,47 @@
       }
     }
     if (!res || !res.ok) { alert('Failed to save'); return; }
-    // After successful save: return user to previous page if internal; otherwise go to list view (or index if no id)
+    // After successful save: determine where to go back
     const ref = document.referrer || '';
     const isInternal = ref && ref.indexOf(window.location.origin) === 0;
-    if (isInternal && history.length > 1) {
-      // If previous page was index or list for this id, just history.back()
-      history.back();
+    
+    if (isInternal && ref.includes('list.html')) {
+      // If came from list view, go back to it with refresh
+      window.location.href = ref;
+    } else if (isInternal && ref.includes('index.html')) {
+      // If came from index, go back to index with refresh
+      window.location.href = 'index.html';
     } else {
-      // Fallback
+      // Default fallback to list view
       window.location.href = id ? `list.html?id=${encodeURIComponent(id)}` : 'index.html';
     }
   }
   // Add item on Enter
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
-  // Enhance back button: go to previous page if in history, otherwise to list view
+  // Enhance back button: go back to referrer or list view with refresh
   if (backLink) {
     backLink.addEventListener('click', (e) => {
       e.preventDefault();
-      if (document.referrer && document.referrer.indexOf(window.location.host) !== -1 && history.length > 1) {
-        history.back();
+      const ref = document.referrer || '';
+      const isInternal = ref && ref.indexOf(window.location.origin) === 0;
+      
+      if (isInternal && (ref.includes('list.html') || ref.includes('index.html'))) {
+        // Go back to the referring page (will trigger fresh load)
+        window.location.href = ref;
       } else {
+        // Default fallback to list view
         window.location.href = `list.html?id=${encodeURIComponent(id)}`;
       }
     });
   }
   saveBtn.addEventListener('click', save);
+  
+  // Initialize autocomplete - DISABLED FOR NOW
+  // loadAutocompleteData().then(() => {
+  //   setupAutocomplete(driverNameInput, driversCache);
+  //   setupAutocomplete(licensePlateInput, licensePlatesCache);
+  // });
+  
   load();
 })();
 

@@ -93,6 +93,20 @@
     }
   }
 
+  // Refresh data when page becomes visible (handles back button navigation)
+  function handleVisibilityChange() {
+    if (!document.hidden) {
+      load(); // Reload data when page becomes visible
+    }
+  }
+
+  // Refresh data when page is shown from cache (handles back/forward navigation)
+  function handlePageShow(event) {
+    if (event.persisted) {
+      load(); // Reload data if page was restored from cache
+    }
+  }
+
   function exportPdf() {
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) { alert('PDF library not loaded'); return; }
@@ -195,6 +209,11 @@
   }
 
   exportBtn.addEventListener('click', exportPdf);
+  
+  // Add event listeners for page visibility and cache restoration
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('pageshow', handlePageShow);
+  
   load();
 })();
 

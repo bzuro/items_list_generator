@@ -1,38 +1,18 @@
 <?php
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
-$dataDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'data';
-$dataFile = $dataDir . DIRECTORY_SEPARATOR . 'lists.json';
+require_once __DIR__ . '/../classes/Database.php';
 
-if (!is_dir($dataDir)) {
-    mkdir($dataDir, 0777, true);
-}
-if (!file_exists($dataFile)) {
-    file_put_contents($dataFile, json_encode([]));
-}
-
-function read_lists(string $file): array {
-    $raw = file_get_contents($file);
-    $lists = json_decode($raw, true);
-    if (!is_array($lists)) return [];
-    return $lists;
-}
-function write_lists(string $file, array $lists): void {
-    // atomic write
-    $tmp = $file . '.tmp';
-    file_put_contents($tmp, json_encode($lists, JSON_PRETTY_PRINT));
-    rename($tmp, $file);
-}
-
-function get_next_id(array $lists): int {
-    $max = 0;
-    foreach ($lists as $l) {
-        if (isset($l['id']) && is_numeric($l['id'])) {
-            $max = max($max, (int)$l['id']);
-        }
-    }
-    return $max + 1;
+try {
+    $db = new Database();
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Database connection failed']);
+    exit;
 }
 
 // get method (consider _method override)
@@ -58,22 +38,25 @@ if ($rawInput !== '') {
     if (is_array($decoded)) $body = $decoded;
 }
 
-// use lists file
-$lists = read_lists($dataFile);
-
 if ($method === 'GET') {
-    if ($id !== null) {
-        foreach ($lists as $l) {
-            if ((string)$l['id'] === (string)$id) {
-                echo json_encode($l);
+    try {
+        if ($id !== null) {
+            $list = $db->getListById((int)$id);
+            if ($list === null) {
+                http_response_code(404);
+                echo json_encode(['error' => 'Not found']);
                 exit;
             }
+            echo json_encode($list);
+            exit;
+        } else {
+            $lists = $db->getAllLists();
+            echo json_encode($lists);
+            exit;
         }
-        http_response_code(404);
-        echo json_encode(['error' => 'Not found']);
-        exit;
-    } else {
-        echo json_encode($lists);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error']);
         exit;
     }
 }
@@ -90,24 +73,22 @@ if ($method === 'POST') {
         $method = $override; // fall through to update logic below
     } else {
         // create new list; prefer JSON body
-        $items = $payload['items'] ?? [];
-        if (!is_array($items)) $items = [];
-        $driverName = $payload['driverName'] ?? '';
-        $licensePlate = $payload['licensePlate'] ?? '';
-        $now = (new DateTime())->format(DateTime::ATOM);
-        $new = [
-            'id' => get_next_id($lists),
-            'items' => array_values($items),
-            'driverName' => $driverName,
-            'licensePlate' => $licensePlate,
-            'createdAt' => $now,
-            'updatedAt' => $now
-        ];
-        $lists[] = $new;
-        write_lists($dataFile, $lists);
-        http_response_code(201);
-        echo json_encode($new);
-        exit;
+        try {
+            $items = $payload['items'] ?? [];
+            if (!is_array($items)) $items = [];
+            $driverName = $payload['driverName'] ?? '';
+            $licensePlate = $payload['licensePlate'] ?? '';
+            
+            $newList = $db->createList($items, $driverName, $licensePlate);
+            
+            http_response_code(201);
+            echo json_encode($newList);
+            exit;
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to create list']);
+            exit;
+        }
     }
 }
 
@@ -120,24 +101,26 @@ if ($method === 'PUT' || $method === 'PATCH') {
         echo json_encode(['error' => 'No id provided for update']);
         exit;
     }
-    $found = false;
-    foreach ($lists as $idx => $l) {
-        if ((string)$l['id'] === (string)$targetId) {
-            $found = true;
-            $items = $payload['items'] ?? $l['items'] ?? [];
-            if (!is_array($items)) $items = [];
-            $lists[$idx]['items'] = array_values($items);
-            $lists[$idx]['driverName'] = $payload['driverName'] ?? $l['driverName'] ?? '';
-            $lists[$idx]['licensePlate'] = $payload['licensePlate'] ?? $l['licensePlate'] ?? '';
-            $lists[$idx]['updatedAt'] = (new DateTime())->format(DateTime::ATOM);
-            write_lists($dataFile, $lists);
-            echo json_encode($lists[$idx]);
+    
+    try {
+        $items = $payload['items'] ?? [];
+        if (!is_array($items)) $items = [];
+        $driverName = $payload['driverName'] ?? '';
+        $licensePlate = $payload['licensePlate'] ?? '';
+        
+        $updatedList = $db->updateList((int)$targetId, $items, $driverName, $licensePlate);
+        
+        if ($updatedList === null) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Not found']);
             exit;
         }
-    }
-    if (!$found) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Not found']);
+        
+        echo json_encode($updatedList);
+        exit;
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to update list']);
         exit;
     }
 }
@@ -149,22 +132,21 @@ if ($method === 'DELETE') {
         echo json_encode(['error' => 'No id provided for delete']);
         exit;
     }
-    $newLists = [];
-    $deleted = false;
-    foreach ($lists as $l) {
-        if ((string)$l['id'] === (string)$targetId) {
-            $deleted = true;
-            continue;
+    
+    try {
+        $deleted = $db->deleteList((int)$targetId);
+        
+        if ($deleted) {
+            echo json_encode(['ok' => true]);
+            exit;
+        } else {
+            http_response_code(404);
+            echo json_encode(['error' => 'Not found']);
+            exit;
         }
-        $newLists[] = $l;
-    }
-    if ($deleted) {
-        write_lists($dataFile, $newLists);
-        echo json_encode(['ok' => true]);
-        exit;
-    } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Not found']);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to delete list']);
         exit;
     }
 }

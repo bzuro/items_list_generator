@@ -225,6 +225,24 @@
     thDatetime.onclick = () => { currentSort = { key: 'datetime', dir: currentSort.key==='datetime' && currentSort.dir==='asc' ? 'desc':'asc' }; renderTable(withSeq); };
   }
 
+  // Refresh data when page becomes visible (handles back button navigation)
+  function handleVisibilityChange() {
+    if (!document.hidden) {
+      loadLists(); // Reload data when page becomes visible
+    }
+  }
+
+  // Refresh data when page is shown from cache (handles back/forward navigation)
+  function handlePageShow(event) {
+    if (event.persisted) {
+      loadLists(); // Reload data if page was restored from cache
+    }
+  }
+
+  // Add event listeners for page visibility and cache restoration
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('pageshow', handlePageShow);
+
   loadLists();
 })();
 
