@@ -35,113 +35,213 @@
 
   // Simple autocomplete implementation
   function setupAutocomplete(input, suggestions) {
-    let currentFocus = -1;
-    let autocompleteDiv = null;
-
-    function closeAutoComplete() {
-      if (autocompleteDiv) {
-        autocompleteDiv.remove();
-        autocompleteDiv = null;
-      }
-      currentFocus = -1;
+    if (!input || !suggestions || suggestions.length === 0) {
+      console.log('Skipping autocomplete setup - missing input or suggestions');
+      return;
     }
-
-    function showSuggestions(value) {
-      closeAutoComplete();
-      if (!value) return;
-
+    
+    console.log(`Setting up autocomplete for input with ${suggestions.length} suggestions`);
+    
+    // Remove any existing autocomplete setup
+    if (input._autocompleteSetup) {
+      console.log('Autocomplete already set up for this input, skipping...');
+      return;
+    }
+    input._autocompleteSetup = true;
+    
+    let autocompleteList = null;
+    let selectedIndex = -1;
+    let originalValue = '';
+    
+    function closeAutocomplete() {
+      if (autocompleteList) {
+        autocompleteList.remove();
+        autocompleteList = null;
+      }
+      selectedIndex = -1;
+      originalValue = '';
+    }
+    
+    function updateSelection() {
+      if (!autocompleteList) return;
+      const items = autocompleteList.children;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (i === selectedIndex) {
+          items[i].style.backgroundColor = '#eef3ff';
+          items[i].style.color = '#2c3a63';
+          // Fill input with selected suggestion
+          input.value = items[i].textContent;
+        } else {
+          items[i].style.backgroundColor = '#fff';
+          items[i].style.color = '#111111';
+        }
+      }
+      
+      // If no selection, restore original value
+      if (selectedIndex === -1) {
+        input.value = originalValue;
+      }
+    }
+    
+    function selectCurrentItem() {
+      if (!autocompleteList || selectedIndex < 0) return false;
+      const items = autocompleteList.children;
+      if (items[selectedIndex]) {
+        input.value = items[selectedIndex].textContent;
+        closeAutocomplete();
+        return true;
+      }
+      return false;
+    }
+    
+    function showAutocomplete(value) {
+      closeAutocomplete();
+      originalValue = value; // Store the typed value
+      if (!value || value.length < 1) return;
+      
       const filtered = suggestions.filter(item => 
         item.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 8); // Limit to 8 suggestions
-
+      ).slice(0, 8);
+      
       if (filtered.length === 0) return;
-
-      autocompleteDiv = document.createElement('div');
-      autocompleteDiv.className = 'autocomplete-items';
-      autocompleteDiv.style.cssText = `
+      
+      // Create autocomplete container
+      autocompleteList = document.createElement('div');
+      autocompleteList.style.cssText = `
         position: absolute;
-        top: 100%;
+        top: calc(100% - 8px);
         left: 0;
-        right: 0;
+        width: 100%;
         background: #fff;
         border: 1px solid #d7dbe6;
         border-top: none;
         border-radius: 0 0 10px 10px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        z-index: 1000;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+        z-index: 999;
         max-height: 200px;
         overflow-y: auto;
+        box-sizing: border-box;
       `;
-
+      
+      // Ensure input has higher z-index than dropdown
+      input.style.zIndex = '1001';
+      input.style.position = 'relative';
+      
       filtered.forEach((item, index) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.style.cssText = `
+        const itemEl = document.createElement('div');
+        itemEl.style.cssText = `
           padding: 0.75rem 0.9rem;
           cursor: pointer;
           border-bottom: 1px solid #eef0f5;
+          background: #fff;
+          color: #111111;
+          font-size: 1rem;
+          transition: background .15s ease;
         `;
-        itemDiv.innerHTML = item.replace(new RegExp(value, 'gi'), `<strong>$&</strong>`);
+        itemEl.textContent = item;
         
-        itemDiv.addEventListener('mouseenter', () => {
-          currentFocus = index;
-          updateActiveItem();
+        itemEl.addEventListener('mouseenter', () => {
+          selectedIndex = index;
+          updateSelection();
         });
         
-        itemDiv.addEventListener('click', () => {
+        itemEl.addEventListener('mouseleave', () => {
+          selectedIndex = -1;
+          updateSelection();
+        });
+        
+        itemEl.addEventListener('click', () => {
           input.value = item;
-          closeAutoComplete();
+          closeAutocomplete();
+          input.focus();
         });
         
-        autocompleteDiv.appendChild(itemDiv);
+        autocompleteList.appendChild(itemEl);
       });
-
-      // Position relative to input
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'relative';
-      wrapper.style.display = 'inline-block';
-      wrapper.style.width = '100%';
       
-      input.parentNode.insertBefore(wrapper, input);
-      wrapper.appendChild(input);
-      wrapper.appendChild(autocompleteDiv);
+      // Position autocomplete relative to input
+      const inputParent = input.parentElement;
+      
+      // Create a wrapper div around the input if it doesn't exist
+      let inputWrapper = input.parentElement;
+      if (!inputWrapper.classList.contains('autocomplete-wrapper')) {
+        inputWrapper = document.createElement('div');
+        inputWrapper.className = 'autocomplete-wrapper';
+        inputWrapper.style.position = 'relative';
+        inputWrapper.style.display = 'block';
+        
+        // Insert wrapper before input and move input into wrapper
+        input.parentElement.insertBefore(inputWrapper, input);
+        inputWrapper.appendChild(input);
+      }
+      
+      // Increase z-index for modals
+      const isInModal = input.closest('.modal');
+      if (isInModal) {
+        autocompleteList.style.zIndex = '10000'; // Higher z-index for modals
+      }
+      
+      inputWrapper.appendChild(autocompleteList);
+      selectedIndex = -1;
     }
-
-    function updateActiveItem() {
-      if (!autocompleteDiv) return;
-      const items = autocompleteDiv.querySelectorAll('div');
-      items.forEach((item, index) => {
-        item.style.backgroundColor = index === currentFocus ? '#f0f4ff' : '#fff';
-      });
-    }
-
+    
+    // Input event for typing
     input.addEventListener('input', (e) => {
-      showSuggestions(e.target.value);
+      if (suggestions && suggestions.length > 0) {
+        showAutocomplete(e.target.value);
+      }
     });
-
+    
+    // Focus event to show suggestions
+    input.addEventListener('focus', (e) => {
+      if (e.target.value) {
+        showAutocomplete(e.target.value);
+      }
+    });
+    
+    // Keyboard navigation
     input.addEventListener('keydown', (e) => {
-      if (!autocompleteDiv) return;
-      const items = autocompleteDiv.querySelectorAll('div');
+      if (!autocompleteList) {
+        if (e.key === 'Escape') {
+          closeAutocomplete();
+        }
+        return;
+      }
+      
+      const itemCount = autocompleteList.children.length;
       
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        currentFocus = Math.min(currentFocus + 1, items.length - 1);
-        updateActiveItem();
+        selectedIndex = Math.min(selectedIndex + 1, itemCount - 1);
+        updateSelection();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        currentFocus = Math.max(currentFocus - 1, -1);
-        updateActiveItem();
-      } else if (e.key === 'Enter' && currentFocus >= 0) {
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelection();
+      } else if (e.key === 'Tab') {
         e.preventDefault();
-        items[currentFocus].click();
+        // Cycle: -1 (original) -> 0 -> 1 -> ... -> last -> -1 (original) -> repeat
+        if (selectedIndex === itemCount - 1) {
+          selectedIndex = -1; // Go back to original after last item
+        } else {
+          selectedIndex = selectedIndex + 1; // Move to next item
+        }
+        updateSelection();
+      } else if (e.key === 'Enter') {
+        if (selectedIndex >= 0) {
+          e.preventDefault();
+          selectCurrentItem();
+        }
       } else if (e.key === 'Escape') {
-        closeAutoComplete();
+        closeAutocomplete();
       }
     });
-
-    // Close on click outside
+    
+    // Close when clicking outside
     document.addEventListener('click', (e) => {
-      if (!input.contains(e.target) && (!autocompleteDiv || !autocompleteDiv.contains(e.target))) {
-        closeAutoComplete();
+      if (!input.contains(e.target) && (!autocompleteList || !autocompleteList.contains(e.target))) {
+        closeAutocomplete();
       }
     });
   }
@@ -202,7 +302,19 @@
 
   function openModal() {
     modal.style.display = 'flex';
-    setTimeout(() => { modalDriverName.focus(); }, 0);
+    setTimeout(() => { 
+      modalDriverName.focus();
+      // Ensure autocomplete is set up when modal opens
+      if (driversCache.length > 0 || licensePlatesCache.length > 0) {
+        setupAutocomplete(modalDriverName, driversCache);
+        setupAutocomplete(modalLicensePlate, licensePlatesCache);
+      } else {
+        loadAutocompleteData().then(() => {
+          setupAutocomplete(modalDriverName, driversCache);
+          setupAutocomplete(modalLicensePlate, licensePlatesCache);
+        });
+      }
+    }, 0);
   }
 
   function closeModal() {
@@ -237,11 +349,14 @@
   modalDriverName.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
   modalLicensePlate.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
 
-  // Initialize autocomplete - DISABLED FOR NOW
-  // loadAutocompleteData().then(() => {
-  //   setupAutocomplete(modalDriverName, driversCache);
-  //   setupAutocomplete(modalLicensePlate, licensePlatesCache);
-  // });
+  // Initialize autocomplete data loading
+  loadAutocompleteData().then(() => {
+    console.log('Drivers cache:', driversCache.length, 'items');
+    console.log('License plates cache:', licensePlatesCache.length, 'items');
+    console.log('Autocomplete data loaded successfully');
+  }).catch(error => {
+    console.error('Failed to load autocomplete data:', error);
+  });
 
   render(loadTemp());
 })();

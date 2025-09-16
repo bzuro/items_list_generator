@@ -42,35 +42,69 @@
 
   // Simple autocomplete implementation
   function setupAutocomplete(input, suggestions) {
-    let currentFocus = -1;
-    let autocompleteDiv = null;
-
-    function closeAutoComplete() {
-      if (autocompleteDiv) {
-        autocompleteDiv.remove();
-        autocompleteDiv = null;
+    let autocompleteList = null;
+    let selectedIndex = -1;
+    let originalValue = '';
+    
+    function closeAutocomplete() {
+      if (autocompleteList) {
+        autocompleteList.remove();
+        autocompleteList = null;
       }
-      currentFocus = -1;
+      selectedIndex = -1;
+      originalValue = '';
     }
-
-    function showSuggestions(value) {
-      closeAutoComplete();
-      if (!value) return;
-
+    
+    function updateSelection() {
+      if (!autocompleteList) return;
+      const items = autocompleteList.children;
+      
+      for (let i = 0; i < items.length; i++) {
+        if (i === selectedIndex) {
+          items[i].style.backgroundColor = '#f0f4ff';
+          // Fill input with selected suggestion
+          input.value = items[i].textContent;
+        } else {
+          items[i].style.backgroundColor = 'white';
+        }
+      }
+      
+      // If no selection, restore original value
+      if (selectedIndex === -1) {
+        input.value = originalValue;
+      }
+    }
+    
+    function selectCurrentItem() {
+      if (!autocompleteList || selectedIndex < 0) return false;
+      const items = autocompleteList.children;
+      if (items[selectedIndex]) {
+        input.value = items[selectedIndex].textContent;
+        closeAutocomplete();
+        return true;
+      }
+      return false;
+    }
+    
+    function showAutocomplete(value) {
+      closeAutocomplete();
+      originalValue = value; // Store the typed value
+      if (!value || value.length < 1) return;
+      
       const filtered = suggestions.filter(item => 
         item.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 8); // Limit to 8 suggestions
-
+      ).slice(0, 8);
+      
       if (filtered.length === 0) return;
-
-      autocompleteDiv = document.createElement('div');
-      autocompleteDiv.className = 'autocomplete-items';
-      autocompleteDiv.style.cssText = `
+      
+      // Create autocomplete container
+      autocompleteList = document.createElement('div');
+      autocompleteList.style.cssText = `
         position: absolute;
         top: 100%;
         left: 0;
         right: 0;
-        background: #fff;
+        background: white;
         border: 1px solid #d7dbe6;
         border-top: none;
         border-radius: 0 0 10px 10px;
@@ -79,76 +113,108 @@
         max-height: 200px;
         overflow-y: auto;
       `;
-
+      
       filtered.forEach((item, index) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.style.cssText = `
+        const itemEl = document.createElement('div');
+        itemEl.style.cssText = `
           padding: 0.75rem 0.9rem;
           cursor: pointer;
           border-bottom: 1px solid #eef0f5;
+          background: white;
         `;
-        itemDiv.innerHTML = item.replace(new RegExp(value, 'gi'), `<strong>$&</strong>`);
+        itemEl.textContent = item;
         
-        itemDiv.addEventListener('mouseenter', () => {
-          currentFocus = index;
-          updateActiveItem();
+        itemEl.addEventListener('mouseenter', () => {
+          selectedIndex = index;
+          updateSelection();
         });
         
-        itemDiv.addEventListener('click', () => {
+        itemEl.addEventListener('mouseleave', () => {
+          selectedIndex = -1;
+          updateSelection();
+        });
+        
+        itemEl.addEventListener('click', () => {
           input.value = item;
-          closeAutoComplete();
+          closeAutocomplete();
+          input.focus();
         });
         
-        autocompleteDiv.appendChild(itemDiv);
+        autocompleteList.appendChild(itemEl);
       });
-
-      // Position relative to input
-      const wrapper = document.createElement('div');
-      wrapper.style.position = 'relative';
-      wrapper.style.display = 'inline-block';
-      wrapper.style.width = '100%';
       
-      input.parentNode.insertBefore(wrapper, input);
-      wrapper.appendChild(input);
-      wrapper.appendChild(autocompleteDiv);
+      // Position autocomplete relative to input
+      const inputParent = input.parentElement;
+      
+      // Make sure parent has relative positioning
+      if (getComputedStyle(inputParent).position === 'static') {
+        inputParent.style.position = 'relative';
+      }
+      
+      // Increase z-index for modals
+      const isInModal = input.closest('.modal');
+      if (isInModal) {
+        autocompleteList.style.zIndex = '10000'; // Higher z-index for modals
+      }
+      
+      inputParent.appendChild(autocompleteList);
+      selectedIndex = -1;
     }
-
-    function updateActiveItem() {
-      if (!autocompleteDiv) return;
-      const items = autocompleteDiv.querySelectorAll('div');
-      items.forEach((item, index) => {
-        item.style.backgroundColor = index === currentFocus ? '#f0f4ff' : '#fff';
-      });
-    }
-
+    
+    // Input event for typing
     input.addEventListener('input', (e) => {
-      showSuggestions(e.target.value);
+      showAutocomplete(e.target.value);
     });
-
+    
+    // Focus event to show suggestions
+    input.addEventListener('focus', (e) => {
+      if (e.target.value) {
+        showAutocomplete(e.target.value);
+      }
+    });
+    
+    // Keyboard navigation
     input.addEventListener('keydown', (e) => {
-      if (!autocompleteDiv) return;
-      const items = autocompleteDiv.querySelectorAll('div');
+      if (!autocompleteList) {
+        if (e.key === 'Escape') {
+          closeAutocomplete();
+        }
+        return;
+      }
+      
+      const itemCount = autocompleteList.children.length;
       
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        currentFocus = Math.min(currentFocus + 1, items.length - 1);
-        updateActiveItem();
+        selectedIndex = Math.min(selectedIndex + 1, itemCount - 1);
+        updateSelection();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        currentFocus = Math.max(currentFocus - 1, -1);
-        updateActiveItem();
-      } else if (e.key === 'Enter' && currentFocus >= 0) {
+        selectedIndex = Math.max(selectedIndex - 1, -1);
+        updateSelection();
+      } else if (e.key === 'Tab') {
         e.preventDefault();
-        items[currentFocus].click();
+        // Cycle: -1 (original) -> 0 -> 1 -> ... -> last -> -1 (original) -> repeat
+        if (selectedIndex === itemCount - 1) {
+          selectedIndex = -1; // Go back to original after last item
+        } else {
+          selectedIndex = selectedIndex + 1; // Move to next item
+        }
+        updateSelection();
+      } else if (e.key === 'Enter') {
+        if (selectedIndex >= 0) {
+          e.preventDefault();
+          selectCurrentItem();
+        }
       } else if (e.key === 'Escape') {
-        closeAutoComplete();
+        closeAutocomplete();
       }
     });
-
-    // Close on click outside
+    
+    // Close when clicking outside
     document.addEventListener('click', (e) => {
-      if (!input.contains(e.target) && (!autocompleteDiv || !autocompleteDiv.contains(e.target))) {
-        closeAutoComplete();
+      if (!input.contains(e.target) && (!autocompleteList || !autocompleteList.contains(e.target))) {
+        closeAutocomplete();
       }
     });
   }
@@ -324,11 +390,11 @@
   }
   saveBtn.addEventListener('click', save);
   
-  // Initialize autocomplete - DISABLED FOR NOW
-  // loadAutocompleteData().then(() => {
-  //   setupAutocomplete(driverNameInput, driversCache);
-  //   setupAutocomplete(licensePlateInput, licensePlatesCache);
-  // });
+  // Initialize autocomplete
+  loadAutocompleteData().then(() => {
+    setupAutocomplete(driverNameInput, driversCache);
+    setupAutocomplete(licensePlateInput, licensePlatesCache);
+  });
   
   load();
 })();
