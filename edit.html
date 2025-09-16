@@ -28,12 +28,12 @@
 
             <div style="display:flex; flex-direction:column; gap:.25rem; min-width:180px; flex:0 0 240px;">
                 <label for="driverName" style="font-size:.9rem; color:#555;">Driver name</label>
-                <input id="driverName" class="input" type="text" placeholder="Driver name" style="width:100%; max-width:240px;" autocomplete="off">
+                <input id="driverName" class="input" type="text" placeholder="Driver name" style="width:100%; max-width:240px;" autocomplete="off" required>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:.25rem; min-width:140px; flex:0 0 160px;">
                 <label for="licensePlate" style="font-size:.9rem; color:#555;">SPZ</label>
-                <input id="licensePlate" class="input" type="text" placeholder="SPZ" style="width:100%; max-width:160px;" autocomplete="off">
+                <input id="licensePlate" class="input" type="text" placeholder="SPZ" style="width:100%; max-width:160px;" autocomplete="off" required>
             </div>
         </div>
 
@@ -62,6 +62,7 @@
     </div>
   </div>
 
+  <script src="assets/js/autocomplete.js"></script>
   <script src="assets/js/edit.js"></script>
 </body>
 </html>

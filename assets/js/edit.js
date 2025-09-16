@@ -14,209 +14,21 @@
   const licensePlateInput = document.getElementById('licensePlate');
   const printAreaHeader = document.querySelector('#printArea .list-header');
 
-  // Autocomplete cache
-  let driversCache = [];
-  let licensePlatesCache = [];
-
   let items = [];
+  let originalItems = []; // Keep track of original items for cancel/reload
+  let hasUnsavedChanges = false;
 
-  // Load autocomplete data
-  async function loadAutocompleteData() {
-    try {
-      const [driversRes, licensePlatesRes] = await Promise.all([
-        fetch('api/drivers.php'),
-        fetch('api/license_plates.php')
-      ]);
-      
-      if (driversRes.ok) {
-        driversCache = await driversRes.json();
-      }
-      
-      if (licensePlatesRes.ok) {
-        licensePlatesCache = await licensePlatesRes.json();
-      }
-    } catch (e) {
-      console.log('Failed to load autocomplete data:', e);
+  function checkForChanges() {
+    const currentItemsStr = JSON.stringify(items.sort());
+    const originalItemsStr = JSON.stringify([...originalItems].sort());
+    hasUnsavedChanges = currentItemsStr !== originalItemsStr;
+    
+    // Update save button to indicate unsaved changes
+    if (hasUnsavedChanges) {
+      saveBtn.textContent = 'Save*';
+    } else {
+      saveBtn.textContent = 'Save';
     }
-  }
-
-  // Simple autocomplete implementation
-  function setupAutocomplete(input, suggestions) {
-    let autocompleteList = null;
-    let selectedIndex = -1;
-    let originalValue = '';
-    
-    function closeAutocomplete() {
-      if (autocompleteList) {
-        autocompleteList.remove();
-        autocompleteList = null;
-      }
-      selectedIndex = -1;
-      originalValue = '';
-    }
-    
-    function updateSelection() {
-      if (!autocompleteList) return;
-      const items = autocompleteList.children;
-      
-      for (let i = 0; i < items.length; i++) {
-        if (i === selectedIndex) {
-          items[i].style.backgroundColor = '#f0f4ff';
-          // Fill input with selected suggestion
-          input.value = items[i].textContent;
-        } else {
-          items[i].style.backgroundColor = 'white';
-        }
-      }
-      
-      // If no selection, restore original value
-      if (selectedIndex === -1) {
-        input.value = originalValue;
-      }
-    }
-    
-    function selectCurrentItem() {
-      if (!autocompleteList || selectedIndex < 0) return false;
-      const items = autocompleteList.children;
-      if (items[selectedIndex]) {
-        input.value = items[selectedIndex].textContent;
-        closeAutocomplete();
-        return true;
-      }
-      return false;
-    }
-    
-    function showAutocomplete(value) {
-      closeAutocomplete();
-      originalValue = value; // Store the typed value
-      if (!value || value.length < 1) return;
-      
-      const filtered = suggestions.filter(item => 
-        item.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 8);
-      
-      if (filtered.length === 0) return;
-      
-      // Create autocomplete container
-      autocompleteList = document.createElement('div');
-      autocompleteList.style.cssText = `
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid #d7dbe6;
-        border-top: none;
-        border-radius: 0 0 10px 10px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        z-index: 1000;
-        max-height: 200px;
-        overflow-y: auto;
-      `;
-      
-      filtered.forEach((item, index) => {
-        const itemEl = document.createElement('div');
-        itemEl.style.cssText = `
-          padding: 0.75rem 0.9rem;
-          cursor: pointer;
-          border-bottom: 1px solid #eef0f5;
-          background: white;
-        `;
-        itemEl.textContent = item;
-        
-        itemEl.addEventListener('mouseenter', () => {
-          selectedIndex = index;
-          updateSelection();
-        });
-        
-        itemEl.addEventListener('mouseleave', () => {
-          selectedIndex = -1;
-          updateSelection();
-        });
-        
-        itemEl.addEventListener('click', () => {
-          input.value = item;
-          closeAutocomplete();
-          input.focus();
-        });
-        
-        autocompleteList.appendChild(itemEl);
-      });
-      
-      // Position autocomplete relative to input
-      const inputParent = input.parentElement;
-      
-      // Make sure parent has relative positioning
-      if (getComputedStyle(inputParent).position === 'static') {
-        inputParent.style.position = 'relative';
-      }
-      
-      // Increase z-index for modals
-      const isInModal = input.closest('.modal');
-      if (isInModal) {
-        autocompleteList.style.zIndex = '10000'; // Higher z-index for modals
-      }
-      
-      inputParent.appendChild(autocompleteList);
-      selectedIndex = -1;
-    }
-    
-    // Input event for typing
-    input.addEventListener('input', (e) => {
-      showAutocomplete(e.target.value);
-    });
-    
-    // Focus event to show suggestions
-    input.addEventListener('focus', (e) => {
-      if (e.target.value) {
-        showAutocomplete(e.target.value);
-      }
-    });
-    
-    // Keyboard navigation
-    input.addEventListener('keydown', (e) => {
-      if (!autocompleteList) {
-        if (e.key === 'Escape') {
-          closeAutocomplete();
-        }
-        return;
-      }
-      
-      const itemCount = autocompleteList.children.length;
-      
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        selectedIndex = Math.min(selectedIndex + 1, itemCount - 1);
-        updateSelection();
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        selectedIndex = Math.max(selectedIndex - 1, -1);
-        updateSelection();
-      } else if (e.key === 'Tab') {
-        e.preventDefault();
-        // Cycle: -1 (original) -> 0 -> 1 -> ... -> last -> -1 (original) -> repeat
-        if (selectedIndex === itemCount - 1) {
-          selectedIndex = -1; // Go back to original after last item
-        } else {
-          selectedIndex = selectedIndex + 1; // Move to next item
-        }
-        updateSelection();
-      } else if (e.key === 'Enter') {
-        if (selectedIndex >= 0) {
-          e.preventDefault();
-          selectCurrentItem();
-        }
-      } else if (e.key === 'Escape') {
-        closeAutocomplete();
-      }
-    });
-    
-    // Close when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!input.contains(e.target) && (!autocompleteList || !autocompleteList.contains(e.target))) {
-        closeAutocomplete();
-      }
-    });
   }
 
   function render() {
@@ -232,51 +44,48 @@
         li.className = 'item';
         li.style.display = 'flex';
         li.style.alignItems = 'center';
-        li.style.justifyContent = 'space-between';
+        li.style.gap = '0.5rem';
+
         const span = document.createElement('div');
         span.className = 'text';
+        span.style.flex = '1';
         span.textContent = text;
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.title = 'Delete';
-        delBtn.textContent = '🗑️';
-        delBtn.style.color = '#a33';
-        delBtn.style.background = 'transparent';
-        delBtn.style.border = 'none';
-        delBtn.style.cursor = 'pointer';
-        delBtn.style.padding = '0 .25rem';
-        delBtn.style.fontSize = '0.95rem';
-        const deleteModal = document.getElementById('deleteModal');
-        const deleteConfirm = document.getElementById('deleteConfirm');
-        const deleteCancel = document.getElementById('deleteCancel');
-        const deleteMessage = document.getElementById('deleteMessage');
-        let pendingDeleteIndex = null;
+
+        const delBtn = document.createElement('span');
+        delBtn.innerHTML = '🗑️';
+        delBtn.title = 'Delete item';
+        delBtn.style.cssText = `
+          cursor: pointer;
+          font-size: 1rem;
+          padding: 0.25rem;
+          color: #999;
+          transition: color 0.15s ease;
+          user-select: none;
+        `;
+        
+        // Hover effect
+        delBtn.addEventListener('mouseenter', () => {
+          delBtn.style.color = '#ff4757';
+        });
+        delBtn.addEventListener('mouseleave', () => {
+          delBtn.style.color = '#999';
+        });
+
+        // Delete functionality - now temporary until save
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          pendingDeleteIndex = i;
-          if (deleteMessage) {
-            deleteMessage.innerHTML = `Are you sure you want to delete <strong>${text}</strong>?`;
-          }
-          deleteModal.style.display = 'flex';
+          items.splice(i, 1);
+          render();
+          checkForChanges();
         });
-        if (deleteCancel && deleteConfirm && deleteModal) {
-          deleteCancel.onclick = () => { pendingDeleteIndex = null; deleteModal.style.display = 'none'; };
-          deleteConfirm.onclick = () => {
-            if (pendingDeleteIndex !== null) {
-              items.splice(pendingDeleteIndex, 1);
-              pendingDeleteIndex = null;
-              deleteModal.style.display = 'none';
-              render();
-            }
-          };
-          deleteModal.addEventListener('click', (ev) => { if (ev.target === deleteModal) { pendingDeleteIndex = null; deleteModal.style.display = 'none'; } });
-        }
+
         li.appendChild(span);
         li.appendChild(delBtn);
         list.appendChild(li);
       });
     }
-    // show count in header
+
+    // Show count in header
     const count = items.length;
     if (printAreaHeader) {
       let badge = document.getElementById('editCountBadge');
@@ -302,29 +111,59 @@
     items.push(value);
     input.value = '';
     render();
+    checkForChanges();
   }
 
   async function load() {
-    const res = await fetch(`api/lists.php?id=${encodeURIComponent(id)}`);
-    if (!res.ok) { alert('Not found'); window.location.replace('index.html'); return; }
-    const data = await res.json();
-    items = Array.isArray(data.items) ? data.items : [];
-    backLink.href = `list.html?id=${encodeURIComponent(id)}`;
-    if (driverNameInput && licensePlateInput) {
-      driverNameInput.value = data.driverName || '';
-      licensePlateInput.value = data.licensePlate || '';
+    try {
+      const res = await fetch(`api/lists.php?id=${encodeURIComponent(id)}`);
+      if (!res.ok) { 
+        alert('List not found'); 
+        window.location.replace('index.html'); 
+        return; 
+      }
+      const data = await res.json();
+      originalItems = Array.isArray(data.items) ? [...data.items] : []; // Store original
+      items = [...originalItems]; // Create working copy
+      backLink.href = `list.html?id=${encodeURIComponent(id)}`;
+      
+      if (driverNameInput && licensePlateInput) {
+        driverNameInput.value = data.driverName || '';
+        licensePlateInput.value = data.licensePlate || '';
+      }
+      render();
+      checkForChanges(); // Initialize change detection
+    } catch (error) {
+      console.error('Failed to load list:', error);
+      alert('Failed to load list');
     }
-    render();
   }
 
   async function save() {
+    const driverName = driverNameInput.value.trim();
+    const licensePlate = licensePlateInput.value.trim();
+    
+    // Validation: Both driver name and license plate must be filled
+    if (!driverName) {
+      alert('Driver name is required.');
+      driverNameInput.focus();
+      return;
+    }
+    
+    if (!licensePlate) {
+      alert('SPZ (license plate) is required.');
+      licensePlateInput.focus();
+      return;
+    }
+    
     const uniqueItems = Array.from(new Set(items));
     const payload = {
       id: id,
       items: uniqueItems,
-      driverName: driverNameInput.value.trim(),
-      licensePlate: licensePlateInput.value.trim()
+      driverName: driverName,
+      licensePlate: licensePlate
     };
+
     let res;
     try {
       // Primary attempt: real PUT
@@ -333,7 +172,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      // Some shared hosts block PUT; fallback via POST + _method override or X-HTTP-Method-Override
+
+      // Some shared hosts block PUT; fallback via POST + _method override
       if (!res.ok && (res.status === 405 || res.status === 400)) {
         res = await fetch(`api/lists.php?id=${encodeURIComponent(id)}&_method=PUT`, {
           method: 'POST',
@@ -354,7 +194,12 @@
         return;
       }
     }
-    if (!res || !res.ok) { alert('Failed to save'); return; }
+
+    if (!res || !res.ok) { 
+      alert('Failed to save'); 
+      return; 
+    }
+
     // After successful save: determine where to go back
     const ref = document.referrer || '';
     const isInternal = ref && ref.indexOf(window.location.origin) === 0;
@@ -370,8 +215,15 @@
       window.location.href = id ? `list.html?id=${encodeURIComponent(id)}` : 'index.html';
     }
   }
-  // Add item on Enter
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
+
+  // Event listeners
+  input.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter') { 
+      e.preventDefault(); 
+      addItem(); 
+    } 
+  });
+
   // Enhance back button: go back to referrer or list view with refresh
   if (backLink) {
     backLink.addEventListener('click', (e) => {
@@ -388,15 +240,16 @@
       }
     });
   }
+
   saveBtn.addEventListener('click', save);
   
-  // Initialize autocomplete
-  loadAutocompleteData().then(() => {
-    setupAutocomplete(driverNameInput, driversCache);
-    setupAutocomplete(licensePlateInput, licensePlatesCache);
-  });
+  // Initialize autocomplete after DOM is ready
+  setTimeout(() => {
+    if (window.AutocompleteManager && driverNameInput && licensePlateInput) {
+      window.AutocompleteManager.setup(driverNameInput, 'drivers');
+      window.AutocompleteManager.setup(licensePlateInput, 'licensePlates');
+    }
+  }, 100);
   
   load();
 })();
-
-
