@@ -291,9 +291,6 @@ export function generateListPDF(listData, filename = null) {
     doc.text(spzText, spzStartX + 15, headerY, { maxWidth: spzWidth - 15 });
     headerY += 8;
     
-    // Separator line
-    doc.setDrawColor(200);
-    doc.line(margin, headerY, pageWidth - margin, headerY);
   }
   
   // Function to add footer to current page
