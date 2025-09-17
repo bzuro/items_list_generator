@@ -37,23 +37,41 @@ mysql -u root -p < database/schema.sql
 1. Open your browser and go to: `http://localhost/items_list_generator/api/lists.php`
 2. You should see an empty JSON array: `[]`
 3. If you see an error, check your database configuration
+## Setup Instructions
 
-### 4. Migrate Existing Data (Optional)
-If you have existing JSON data to migrate:
-
-1. Open `database/migrate.php`
-2. Uncomment the line: `// migrateJsonToDatabase();`
-3. Run the migration by visiting: `http://localhost/items_list_generator/database/migrate.php`
-4. Check the output for any errors
-5. After successful migration, comment the line back or delete the migration file
-
-### 5. Backup Your JSON Data
-Before fully switching to MySQL, backup your JSON file:
-```bash
-copy data\lists.json data\lists.json.backup
+### 1. Database Configuration
+Edit `config/database.php` with your MySQL credentials:
+```php
+return [
+    'host' => 'localhost',
+    'port' => 3306,
+    'database' => 'items_list_generator',
+    'username' => 'root',
+    'password' => '',
+    'charset' => 'utf8mb4',
+    'options' => [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]
+];
 ```
 
-## New Features
+### 2. Create Database
+Create the database in MySQL:
+```sql
+CREATE DATABASE items_list_generator CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 3. Import Database Schema
+Import the database schema using phpMyAdmin or MySQL command line:
+```bash
+mysql -u root -p items_list_generator < database/schema.sql
+```
+
+Or import `database/schema.sql` through phpMyAdmin.
+
+## Features
 
 ### Database Structure
 - **drivers**: Stores driver names for autocomplete
@@ -83,11 +101,6 @@ copy data\lists.json data\lists.json.backup
 - Ensure the database `items_list_generator` exists
 - Check PHP error logs
 
-### Migration Issues
-- Make sure the JSON file exists at `data/lists.json`
-- Check file permissions
-- Verify database tables are created correctly
-
 ### Autocomplete Not Working
 - Check browser console for JavaScript errors
 - Verify API endpoints are accessible
@@ -97,21 +110,29 @@ copy data\lists.json data\lists.json.backup
 ```
 items_list_generator/
 ├── api/
-│   ├── lists.php (updated for MySQL)
-│   ├── drivers.php (new)
-│   └── license_plates.php (new)
+│   ├── lists.php
+│   ├── drivers.php
+│   └── license_plates.php
+├── assets/
+│   ├── css/
+│   │   └── styles.css
+│   └── js/
+│       ├── autocomplete.js
+│       ├── edit.js
+│       ├── index.js
+│       ├── new.js
+│       └── view.js
 ├── classes/
-│   └── Database.php (new)
+│   └── Database.php
 ├── config/
-│   └── database.php (new)
+│   └── database.php
 ├── database/
-│   ├── schema.sql (new)
-│   └── migrate.php (new)
-├── assets/js/
-│   ├── new.js (updated with autocomplete)
-│   └── edit.js (updated with autocomplete)
-└── data/
-    └── lists.json (legacy - can be removed after migration)
+│   └── schema.sql
+├── edit.html
+├── index.html
+├── list.html
+├── new.html
+└── MYSQL_SETUP.md
 ```
 
 ## Performance Benefits
