@@ -92,7 +92,10 @@
     const value = input.value.trim();
     if (!value) return;
     const items = loadTemp();
-    if (items.includes(value)) { return; }
+    if (items.includes(value)) { 
+      input.value = ''; // Clear input when item already exists
+      return; 
+    }
     items.push(value);
     saveTemp(items);
     input.value = '';
