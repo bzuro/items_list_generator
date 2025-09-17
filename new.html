@@ -3,25 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create List</title>
+  <title>Přepravní Doklad ##</title>
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>
 <body>
-  <div class="app">
+  <div class="app new-page">
     <div class="card">
       <div class="card-header">
-        <h1 class="title">New List</h1>
+        <h1 class="title">Přepravní Doklad ## (Neukončený)</h1>
         <div class="controls">
-          <a class="btn" href="index.html">Back</a>
+          <a class="btn" href="index.html">Spět na seznam</a>
         </div>
       </div>
       <div class="card-body">
-        <input id="itemInput" class="input" type="text" placeholder="Type item and press Enter" aria-label="New list item" autocomplete="off">
-        <div class="hint">Press Enter to add. When finished, click "Ukončit doklad".</div>
 
+        <div class="form-row">
+            <div class="form-field form-field-extra-wide">
+                <label for="itemInput" class="form-label">Přidat Položku</label>
+                <div class="input-hint-row">
+                    <input id="itemInput" class="input input-wide" type="text" placeholder="Číslo Balíka" aria-label="New list item" autocomplete="off">
+                    <span class="hint">&nbsp;&nbsp;ENTER pro potvrzení..</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- <div>&nbsp;</div><div>&nbsp;</div> -->
         <div id="printArea">
           <div class="list-header">
-            <h2 class="list-title">Current List</h2>
+            <h2 class="list-title">Položky k odeslání</h2>
           </div>
           <ul id="items" class="items"></ul>
         </div>
@@ -32,14 +41,14 @@
         <div id="metaModal" class="modal">
           <div class="card modal-content">
             <div class="card-header">
-              <h2 class="title">Finish List</h2>
+              <h2 class="title">Ukončit doklad</h2>
             </div>
             <div class="card-body">
-              <input id="modalDriverName" class="input input-full modal-input" type="text" placeholder="Driver name" autofocus autocomplete="off" required>
+              <input id="modalDriverName" class="input input-full modal-input" type="text" placeholder="Jméno Řidiče" autofocus autocomplete="off" required>
               <input id="modalLicensePlate" class="input input-full modal-input" type="text" placeholder="SPZ" autocomplete="off" required>
               <div class="modal-actions">
-                <button id="modalCancel" class="btn">Cancel</button>
-                <button id="modalSubmit" class="btn btn-primary">Save</button>
+                <button id="modalCancel" class="btn">Zrušit</button>
+                <button id="modalSubmit" class="btn btn-primary">Uložit</button>
               </div>
             </div>
           </div>
@@ -49,13 +58,13 @@
         <div id="deleteModal" class="modal">
           <div class="card modal-content">
             <div class="card-header">
-              <h2 class="title">Delete item</h2>
+              <h2 class="title">Smazat Položku?</h2>
             </div>
             <div class="card-body">
-              <div id="deleteMessage" class="modal-message">Are you sure you want to delete this item?</div>
+              <div id="deleteMessage" class="modal-message"></div>
               <div class="modal-actions">
-                <button id="deleteCancel" class="btn">Cancel</button>
-                <button id="deleteConfirm" class="btn btn-danger">Delete</button>
+                <button id="deleteCancel" class="btn">Zrušit</button>
+                <button id="deleteConfirm" class="btn btn-danger">Smazat</button>
               </div>
             </div>
           </div>

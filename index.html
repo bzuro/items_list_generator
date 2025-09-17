@@ -10,22 +10,22 @@
   <div class="app">
     <div class="card">
       <div class="card-header">
-        <h1 class="title">Lists</h1>
+        <h1 class="title">Seznam Přepravních Dokladů</h1>
         <div class="controls">
-          <a class="btn btn-primary" href="new.html">New List</a>
+          <a class="btn btn-primary" href="new.html">Nový Doklad</a>
         </div>
       </div>
       <div class="card-body">
-        <div id="listsEmpty" class="empty">No lists yet. Create a new one.</div>
+        <div id="listsEmpty" class="empty">Žádné doklady. Vytvořte nový.</div>
         <div class="table-responsive">
           <table class="table table-full">
             <thead>
               <tr>
                 <th id="th-id" class="table-header">ID</th>
-                <th id="th-driver" class="table-header">Driver</th>
+                <th id="th-driver" class="table-header">Řidič</th>
                 <th id="th-spz" class="table-header">SPZ</th>
-                <th id="th-count" class="table-header"># Items</th>
-                <th id="th-datetime" class="table-header">Datetime</th>
+                <th id="th-count" class="table-header"># Balíky</th>
+                <th id="th-datetime" class="table-header">Dátum</th>
               </tr>
             </thead>
             <tbody id="listsTableBody"></tbody>
@@ -35,8 +35,9 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+  <!-- pdfmake for PDF generation with UTF-8 support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
   <script type="module" src="assets/js/index.js"></script>
 </body>
 </html>

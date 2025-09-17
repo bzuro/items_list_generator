@@ -41,7 +41,7 @@ export function navigateBack(fallbackUrl = 'index.html') {
   const ref = document.referrer || '';
   const isInternal = ref && ref.indexOf(window.location.origin) === 0;
   
-  if (isInternal && (ref.includes('list.html') || ref.includes('index.html'))) {
+  if (isInternal && (ref.includes('view.html') || ref.includes('index.html'))) {
     navigateTo(ref);
   } else {
     navigateTo(fallbackUrl);
@@ -122,10 +122,10 @@ export function createItemCountBadge(badgeId, headerElement, count) {
     badge = document.createElement('div');
     badge.id = badgeId;
     badge.className = 'hint count-badge';
-    headerElement.className = 'flex-header';
+    headerElement.classList.add('flex-header'); // Add class instead of replacing
     headerElement.appendChild(badge);
   }
-  badge.innerHTML = `<span class="badge-number">${count}</span> <span class="badge-text">items</span>`;
+  badge.innerHTML = `<span class="badge-number">${count}</span> <span class="badge-text">položek</span>`;
   return badge;
 }
 
@@ -174,7 +174,7 @@ export function setupPageRefreshHandlers(refreshCallback) {
  * @param {Function} onDelete - Callback function when item is deleted (receives item text and index)
  * @param {string} emptyMessage - Message to show when list is empty
  */
-export function renderItemsList(listElement, items, onDelete, emptyMessage = 'No items yet.') {
+export function renderItemsList(listElement, items, onDelete, emptyMessage = 'Žádné položky.') {
   listElement.innerHTML = '';
   
   if (!items.length) {
@@ -241,115 +241,210 @@ export function renderReadOnlyList(listElement, items, emptyMessage = 'No items.
 // ============================================================================
 
 /**
- * Generate and download a PDF for a list
+ * Generate and download a PDF for a list using pdfmake (supports UTF-8/diacritics)
  * @param {Object} listData - List data containing id, items, driverName, licensePlate, createdAt
  * @param {string} filename - Optional filename (defaults to List_{id}.pdf)
  */
 export function generateListPDF(listData, filename = null) {
-  const { jsPDF } = window.jspdf || {};
-  if (!jsPDF) { 
+  if (!window.pdfMake) { 
     alert('PDF library not loaded'); 
     return; 
   }
   
-  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 10;
-  const headerHeight = 25;
-  const footerHeight = 20;
-  const contentStartY = margin + headerHeight;
-  
-  // Function to add header to current page
-  function addHeader() {
-    let headerY = margin;
-    
-    // ID
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.text(`ID: ${listData.id || ''}`, margin, headerY);
-    headerY += 7;
-    
-    // Driver name and SPZ on same line with 2/3 and 1/3 width distribution
-    const contentWidth = pageWidth - 2 * margin;
-    const driverWidth = contentWidth * (2/3);
-    const spzWidth = contentWidth * (1/3);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text('Driver:', margin, headerY);
-    doc.setFont('helvetica', 'bold');
-    const driverName = String(listData.driverName || '-');
-    doc.text(driverName, margin + 20, headerY, { maxWidth: driverWidth - 20 });
-    
-    // SPZ positioned at 2/3 of the content width
-    const spzStartX = margin + driverWidth;
-    doc.setFont('helvetica', 'normal');
-    doc.text('SPZ:', spzStartX, headerY);
-    doc.setFont('helvetica', 'bold');
-    const spzText = String(listData.licensePlate || '-');
-    doc.text(spzText, spzStartX + 15, headerY, { maxWidth: spzWidth - 15 });
-    headerY += 8;
-    
-  }
-  
-  // Function to add footer to current page
-  function addFooter() {
-    const dateText = `Date: ${new Date(listData.createdAt || Date.now()).toLocaleDateString()}`;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text(dateText, margin, pageHeight - margin);
-    doc.text('Signature: ____________________', pageWidth - margin - 60, pageHeight - margin);
-  }
+  // Configure pdfMake fonts for Czech/Slovak diacritics support
+  window.pdfMake.fonts = {
+    Roboto: {
+      normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf',
+      bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf',
+      italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Italic.ttf',
+      bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-MediumItalic.ttf'
+    }
+  };
 
-  // Add header to first page
-  addHeader();
-  let y = contentStartY;
-
-  // Items title
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('Items', margin, y);
-  y += 6;
-  doc.setDrawColor(200);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
-
-  // Items list
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(12);
   const items = Array.isArray(listData.items) ? listData.items : [];
   
-  items.forEach(text => {
-    if (y > pageHeight - margin - footerHeight) {
-      // Add footer to current page before creating new page
-      addFooter();
-      // Create new page
-      doc.addPage();
-      // Add header to new page
-      addHeader();
-      y = contentStartY;
-      
-      // Add "Items (continued)" title on new pages
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.text('Items (continued)', margin, y);
-      y += 6;
-      doc.setDrawColor(200);
-      doc.line(margin, y, pageWidth - margin, y);
-      y += 6;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
+  // Format creation date with time for header (24-hour format with / separator)
+  const headerDateText = formatDate(new Date(listData.createdAt || Date.now()));
+  
+  // Format current date with time for footer (24-hour format with / separator)
+  const footerDateText = formatDate(new Date());
+  
+  // Create the document definition with proper UTF-8 support
+  const docDefinition = {
+    // Header - contains all content except signature
+    header: function(currentPage, pageCount) {
+      return {
+        stack: [
+          // Document title with creation date/time
+          {
+            columns: [
+              {
+                width: '*',
+                text: `Přepravní Doklad č.: ${listData.id || 'N/A'}`,
+                style: 'header'
+              },
+              {
+                width: 'auto',
+                text: headerDateText,
+                style: 'headerDate'
+              }
+            ],
+            margin: [0, 0, 0, 10]
+          },
+          
+          // Driver and License plate section
+          {
+            columns: [
+              {
+                width: '65%',
+                text: [
+                  { text: 'Řidič: ', style: 'label' },
+                  { text: listData.driverName || '-', style: 'value' }
+                ]
+              },
+              {
+                width: '35%',
+                text: [
+                  { text: 'SPZ: ', style: 'label' },
+                  { text: listData.licensePlate || '-', style: 'value' }
+                ],
+                alignment: 'right'
+              }
+            ],
+            margin: [0, 0, 0, 15]
+          },
+          
+          // Items section with count
+          {
+            columns: [
+              {
+                width: '*',
+                text: 'Seznam položek',
+                style: 'sectionHeader'
+              },
+              {
+                width: 'auto',
+                text: `${items.length}`,
+                style: 'itemCount'
+              }
+            ],
+            margin: [0, 20, 0, 0]
+          },
+          
+          // Horizontal line
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 0, y1: 0,
+                x2: 515, y2: 0,
+                lineWidth: 1,
+                lineColor: '#CCCCCC'
+              }
+            ],
+            margin: [0, 0, 0, 10]
+          }
+        ],
+        margin: [40, 40, 40, 20]
+      };
+    },
+    
+    content: [
+      // Items list (without bullet points)
+      {
+        stack: items.map(item => ({
+          text: String(item),
+          style: 'listItem'
+        })),
+        margin: [0, 10, 0, 20]
+      }
+    ],
+    
+    // Footer - contains date and signature separated and aligned
+    footer: function(currentPage, pageCount) {
+      return {
+        columns: [
+          {
+            width: '*',
+            text: footerDateText,
+            style: 'footerDate'
+          },
+          {
+            width: 'auto',
+            text: 'Převzal (podpis): ____________________',
+            style: 'footerSignature'
+          }
+        ],
+        margin: [40, 40, 40, 0]
+      };
+    },
+    
+    // Styles
+    styles: {
+      header: {
+        fontSize: 12,
+        bold: true,
+        margin: [0, 0, 0, 5]
+      },
+      headerDate: {
+        fontSize: 12,
+        bold: true,
+        alignment: 'right'
+      },
+      label: {
+        fontSize: 11,
+        color: '#666666'
+      },
+      value: {
+        fontSize: 11,
+        bold: true
+      },
+      sectionHeader: {
+        fontSize: 14,
+        bold: true
+      },
+      itemCount: {
+        fontSize: 16,
+        bold: true,
+        alignment: 'right'
+      },
+      listItem: {
+        fontSize: 12,
+        margin: [0, 2, 0, 2]
+      },
+      footerDate: {
+        fontSize: 11,
+        alignment: 'left'
+      },
+      footerSignature: {
+        fontSize: 11,
+        alignment: 'right'
+      }
+    },
+    
+    // Default style
+    defaultStyle: {
+      font: 'Roboto',
+      fontSize: 12,
+      lineHeight: 1.3
+    },
+    
+    // Page settings - increased top margin for header, bottom margin for footer
+    pageSize: 'A4',
+    pageMargins: [40, 150, 40, 100],
+    
+    // Document info
+    info: {
+      title: `Prepravní Doklad ${listData.id || ''}`,
+      author: 'Items List Generator',
+      subject: 'Transport Document',
+      creator: 'Items List Generator'
     }
-    doc.text(String(text), margin, y);
-    y += 7;
-  });
+  };
 
-  // Add footer to last page
-  addFooter();
-
+  // Generate and download the PDF
   const pdfFilename = filename || `List_${listData.id}.pdf`;
-  doc.save(pdfFilename);
+  window.pdfMake.createPdf(docDefinition).download(pdfFilename);
 }
 
 // ============================================================================
@@ -439,17 +534,12 @@ export const storage = {
  * @returns {string} Formatted date string
  */
 export function formatDate(date) {
-  return new Date(date || Date.now()).toLocaleString();
+  const d = new Date(date || Date.now());
+  const dateStr = d.toLocaleDateString('cs-CZ');
+  const timeStr = d.toLocaleTimeString('cs-CZ', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  return dateStr + '\u00A0\u00A0' + timeStr; // Using non-breaking spaces
 }
 
-/**
- * Format date for PDF footer
- * @param {string|Date} date - Date to format
- * @returns {string} Formatted date string
- */
-export function formatDateForPDF(date) {
-  return new Date(date || Date.now()).toLocaleDateString();
-}
 
 // ============================================================================
 // API Utilities
@@ -538,4 +628,13 @@ export async function getList(id) {
  */
 export async function getAllLists() {
   return apiCall('api/lists.php');
+}
+
+/**
+ * Get the next auto-increment ID for new lists
+ * @returns {Promise<number>} Next list ID
+ */
+export async function getNextListId() {
+  const response = await apiCall('api/lists.php?nextId=1');
+  return response.nextId;
 }

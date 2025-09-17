@@ -263,4 +263,10 @@ class Database {
         
         return $stmt->rowCount() > 0;
     }
+    
+    public function getNextListId(): int {
+        $stmt = $this->pdo->query("SELECT AUTO_INCREMENT FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'lists'");
+        $result = $stmt->fetch();
+        return $result ? (int)$result['AUTO_INCREMENT'] : 1;
+    }
 }

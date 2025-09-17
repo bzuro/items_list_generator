@@ -49,6 +49,10 @@ if ($method === 'GET') {
             }
             echo json_encode($list);
             exit;
+        } else if (isset($_GET['nextId'])) {
+            $nextId = $db->getNextListId();
+            echo json_encode(['nextId' => $nextId]);
+            exit;
         } else {
             $lists = $db->getAllLists();
             echo json_encode($lists);

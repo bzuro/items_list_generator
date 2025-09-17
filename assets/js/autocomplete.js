@@ -1,6 +1,7 @@
 /**
  * Autocomplete Module
  * Provides reusable autocomplete functionality for input fields
+ * Updated: Removed hover functionality - should only work on click now
  */
 class Autocomplete {
   constructor() {
@@ -250,16 +251,6 @@ class AutocompleteInstance {
     itemElement.className = 'autocomplete-item';
     itemElement.textContent = item;
 
-    itemElement.addEventListener('mouseenter', () => {
-      this.selectedIndex = index;
-      this.updateSelection();
-    });
-
-    itemElement.addEventListener('mouseleave', () => {
-      this.selectedIndex = -1;
-      this.updateSelection();
-    });
-
     itemElement.addEventListener('click', () => {
       this.input.value = item;
       this.close();
@@ -277,15 +268,9 @@ class AutocompleteInstance {
     for (let i = 0; i < items.length; i++) {
       if (i === this.selectedIndex) {
         items[i].classList.add('selected');
-        this.input.value = items[i].textContent;
       } else {
         items[i].classList.remove('selected');
       }
-    }
-
-    // Restore original value if no selection
-    if (this.selectedIndex === -1) {
-      this.input.value = this.originalValue;
     }
   }
 
