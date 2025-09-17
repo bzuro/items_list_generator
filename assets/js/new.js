@@ -111,13 +111,40 @@ import {
     try {
       const createdList = await createList({ items, driverName, licensePlate });
       
+      // Close modal first
+      closeModal();
+      
       // Generate and download PDF immediately after saving
       if (createdList && createdList.id) {
-        generateListPDF(createdList, `List_${createdList.id}.pdf`);
+        // Wait for pdfMake to be available
+        if (window.pdfMake) {
+          generateListPDF(createdList, `List_${createdList.id}.pdf`);
+          
+          // Wait a moment for PDF generation before navigation
+          setTimeout(() => {
+            storage.remove(STORAGE_KEY);
+            navigateBack('index.html');
+          }, 300);
+        } else {
+          // Wait a bit for pdfMake to load
+          setTimeout(() => {
+            if (window.pdfMake) {
+              generateListPDF(createdList, `List_${createdList.id}.pdf`);
+              setTimeout(() => {
+                storage.remove(STORAGE_KEY);
+                navigateBack('index.html');
+              }, 300);
+            } else {
+              console.warn('PDF library not available for auto-download');
+              storage.remove(STORAGE_KEY);
+              navigateBack('index.html');
+            }
+          }, 500);
+        }
+      } else {
+        storage.remove(STORAGE_KEY);
+        navigateBack('index.html');
       }
-      
-      storage.remove(STORAGE_KEY);
-      navigateBack('index.html');
     } catch (error) {
       alert('Chyba při ukládání.');
     }
@@ -152,8 +179,28 @@ import {
   modalSubmit.addEventListener('click', submitMeta);
   modalCancel.addEventListener('click', closeModal);
   modal.addEventListener('mousedown', (e) => { if (e.target === modal) closeModal(); });
-  modalDriverName.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
-  modalLicensePlate.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
+  modalDriverName.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter') { 
+      // Check if autocomplete dropdown is visible and let it handle the event
+      const autocompleteInstance = window.AutocompleteManager.instances.get(modalDriverName);
+      if (autocompleteInstance && autocompleteInstance.isVisible) {
+        return; // Let autocomplete handle the Enter key
+      }
+      e.preventDefault(); 
+      submitMeta(); 
+    } 
+  });
+  modalLicensePlate.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter') { 
+      // Check if autocomplete dropdown is visible and let it handle the event
+      const autocompleteInstance = window.AutocompleteManager.instances.get(modalLicensePlate);
+      if (autocompleteInstance && autocompleteInstance.isVisible) {
+        return; // Let autocomplete handle the Enter key
+      }
+      e.preventDefault(); 
+      submitMeta(); 
+    } 
+  });
 
   // Initialize
   loadNextId();

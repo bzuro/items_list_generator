@@ -193,9 +193,15 @@ class AutocompleteInstance {
         break;
       
       case 'Enter':
-        if (this.selectedIndex >= 0) {
+        if (this.dropdownElement && this.selectedIndex >= 0) {
           e.preventDefault();
+          e.stopPropagation();
           this.selectCurrentItem();
+        }
+        // If dropdown is visible but no item selected, still prevent to avoid modal submission
+        else if (this.dropdownElement) {
+          e.preventDefault();
+          e.stopPropagation();
         }
         break;
       

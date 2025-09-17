@@ -165,7 +165,6 @@ import {
     try {
       window.AutocompleteManager.setup(driverNameInput, 'drivers');
       window.AutocompleteManager.setup(licensePlateInput, 'licensePlates');
-      console.log('Autocomplete setup complete for edit page');
     } catch (error) {
       console.error('Error setting up autocomplete:', error);
     }
