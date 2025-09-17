@@ -17,23 +17,22 @@
         </div>
       </div>
       <div class="card-body">
-        <div style="display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; margin: 0 0 1.5rem 0;">
-            <div style="display:flex; flex-direction:column; gap:.25rem; min-width:200px; flex:0 1 360px; max-width:360px;">
-                <label for="itemInput" style="font-size:.9rem; color:#555;">New Item</label>
-                <input id="itemInput" class="input" type="text"
+        <div class="form-row">
+            <div class="form-field form-field-wide">
+                <label for="itemInput" class="form-label">New Item</label>
+                <input id="itemInput" class="input input-full" type="text"
                     placeholder="Type item and press Enter"
-                    aria-label="New list item" autocomplete="off"
-                    style="width:100%;">
+                    aria-label="New list item" autocomplete="off">
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:.25rem; min-width:180px; flex:0 0 240px;">
-                <label for="driverName" style="font-size:.9rem; color:#555;">Driver name</label>
-                <input id="driverName" class="input" type="text" placeholder="Driver name" style="width:100%; max-width:240px;" autocomplete="off" required>
+            <div class="form-field form-field-medium">
+                <label for="driverName" class="form-label">Driver name</label>
+                <input id="driverName" class="input input-medium" type="text" placeholder="Driver name" autocomplete="off" required>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:.25rem; min-width:140px; flex:0 0 160px;">
-                <label for="licensePlate" style="font-size:.9rem; color:#555;">SPZ</label>
-                <input id="licensePlate" class="input" type="text" placeholder="SPZ" style="width:100%; max-width:160px;" autocomplete="off" required>
+            <div class="form-field form-field-narrow">
+                <label for="licensePlate" class="form-label">SPZ</label>
+                <input id="licensePlate" class="input input-narrow" type="text" placeholder="SPZ" autocomplete="off" required>
             </div>
         </div>
 
@@ -44,16 +43,18 @@
           </div>
           <ul id="items" class="items"></ul>
         </div>
-        <div id="deleteModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center;">
-          <div class="card" style="width: 100%; max-width: 420px;">
+        
+        <!-- Delete confirmation modal -->
+        <div id="deleteModal" class="modal">
+          <div class="card modal-content">
             <div class="card-header">
               <h2 class="title">Delete item</h2>
             </div>
             <div class="card-body">
-              <div id="deleteMessage" style="margin-bottom:.75rem;">Are you sure you want to delete this item?</div>
-              <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+              <div id="deleteMessage" class="modal-message">Are you sure you want to delete this item?</div>
+              <div class="modal-actions">
                 <button id="deleteCancel" class="btn">Cancel</button>
-                <button id="deleteConfirm" class="btn btn-primary" style="background:#a33; border-color:#a33;">Delete</button>
+                <button id="deleteConfirm" class="btn btn-danger">Delete</button>
               </div>
             </div>
           </div>
@@ -63,7 +64,7 @@
   </div>
 
   <script src="assets/js/autocomplete.js"></script>
-  <script src="assets/js/edit.js"></script>
+  <script type="module" src="assets/js/edit.js"></script>
 </body>
 </html>
 

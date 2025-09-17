@@ -16,16 +16,16 @@
         </div>
       </div>
       <div class="card-body">
-        <div id="listsEmpty" class="empty" style="display:none">No lists yet. Create a new one.</div>
+        <div id="listsEmpty" class="empty">No lists yet. Create a new one.</div>
         <div class="table-responsive">
-          <table class="table" style="width:100%; border-collapse: collapse;">
+          <table class="table table-full">
             <thead>
               <tr>
-                <th id="th-id" style="cursor:pointer; text-align:left; padding: .5rem;">ID</th>
-                <th id="th-driver" style="cursor:pointer; text-align:left; padding: .5rem;">Driver</th>
-                <th id="th-spz" style="cursor:pointer; text-align:left; padding: .5rem;">SPZ</th>
-                <th id="th-count" style="cursor:pointer; text-align:left; padding: .5rem;"># Items</th>
-                <th id="th-datetime" style="cursor:pointer; text-align:left; padding: .5rem;">Datetime</th>
+                <th id="th-id" class="table-header">ID</th>
+                <th id="th-driver" class="table-header">Driver</th>
+                <th id="th-spz" class="table-header">SPZ</th>
+                <th id="th-count" class="table-header"># Items</th>
+                <th id="th-datetime" class="table-header">Datetime</th>
               </tr>
             </thead>
             <tbody id="listsTableBody"></tbody>
@@ -37,7 +37,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
-  <script src="assets/js/index.js"></script>
+  <script type="module" src="assets/js/index.js"></script>
 </body>
 </html>
 

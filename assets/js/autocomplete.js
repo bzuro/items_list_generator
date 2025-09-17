@@ -121,7 +121,6 @@ class AutocompleteInstance {
     if (!wrapper.classList.contains('autocomplete-wrapper')) {
       wrapper = document.createElement('div');
       wrapper.className = 'autocomplete-wrapper';
-      wrapper.style.cssText = 'position: relative; display: block;';
       
       this.input.parentElement.insertBefore(wrapper, this.input);
       wrapper.appendChild(this.input);
@@ -229,31 +228,13 @@ class AutocompleteInstance {
     this.dropdownElement = document.createElement('div');
     this.dropdownElement.className = 'autocomplete-dropdown';
     
-    // Base styles
-    this.dropdownElement.style.cssText = `
-      position: absolute;
-      top: calc(100% - 8px);
-      left: 0;
-      width: 100%;
-      background: #fff;
-      border: 1px solid #d7dbe6;
-      border-top: none;
-      border-radius: 0 0 10px 10px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-      z-index: 999;
-      max-height: 200px;
-      overflow-y: auto;
-      box-sizing: border-box;
-    `;
-
     // Higher z-index for modals
     if (this.input.closest('.modal')) {
-      this.dropdownElement.style.zIndex = '10000';
+      this.dropdownElement.classList.add('modal-dropdown');
     }
 
     // Ensure input has proper positioning
-    this.input.style.position = 'relative';
-    this.input.style.zIndex = '1001';
+    this.input.className += ' autocomplete-input';
 
     items.forEach((item, index) => {
       const itemElement = this.createDropdownItem(item, index);
@@ -267,15 +248,6 @@ class AutocompleteInstance {
   createDropdownItem(item, index) {
     const itemElement = document.createElement('div');
     itemElement.className = 'autocomplete-item';
-    itemElement.style.cssText = `
-      padding: 0.75rem 0.9rem;
-      cursor: pointer;
-      border-bottom: 1px solid #eef0f5;
-      background: #fff;
-      color: #111111;
-      font-size: 1rem;
-      transition: background .15s ease;
-    `;
     itemElement.textContent = item;
 
     itemElement.addEventListener('mouseenter', () => {
@@ -304,12 +276,10 @@ class AutocompleteInstance {
     
     for (let i = 0; i < items.length; i++) {
       if (i === this.selectedIndex) {
-        items[i].style.backgroundColor = '#eef3ff';
-        items[i].style.color = '#2c3a63';
+        items[i].classList.add('selected');
         this.input.value = items[i].textContent;
       } else {
-        items[i].style.backgroundColor = '#fff';
-        items[i].style.color = '#111111';
+        items[i].classList.remove('selected');
       }
     }
 

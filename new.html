@@ -26,20 +26,36 @@
           <ul id="items" class="items"></ul>
         </div>
 
-        <div style="margin-top: .75rem; display:flex; gap:.5rem;">
+        <div class="actions-row">
           <button id="finishBtn" class="btn btn-primary">Ukončit doklad</button>
         </div>
-        <div id="metaModal" class="modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,.5); align-items: center; justify-content: center;">
-          <div class="card" style="width: 100%; max-width: 420px;">
+        <div id="metaModal" class="modal">
+          <div class="card modal-content">
             <div class="card-header">
               <h2 class="title">Finish List</h2>
             </div>
             <div class="card-body">
-              <input id="modalDriverName" class="input" type="text" placeholder="Driver name" autofocus autocomplete="off" required style="width: 100%; margin-bottom: 0.5rem;">
-              <input id="modalLicensePlate" class="input" type="text" placeholder="SPZ" autocomplete="off" required style="width: 100%; margin-bottom: 0.5rem;">
-              <div style="display:flex; gap:.5rem; margin-top:.75rem; justify-content: flex-end;">
+              <input id="modalDriverName" class="input input-full modal-input" type="text" placeholder="Driver name" autofocus autocomplete="off" required>
+              <input id="modalLicensePlate" class="input input-full modal-input" type="text" placeholder="SPZ" autocomplete="off" required>
+              <div class="modal-actions">
                 <button id="modalCancel" class="btn">Cancel</button>
                 <button id="modalSubmit" class="btn btn-primary">Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Delete confirmation modal -->
+        <div id="deleteModal" class="modal">
+          <div class="card modal-content">
+            <div class="card-header">
+              <h2 class="title">Delete item</h2>
+            </div>
+            <div class="card-body">
+              <div id="deleteMessage" class="modal-message">Are you sure you want to delete this item?</div>
+              <div class="modal-actions">
+                <button id="deleteCancel" class="btn">Cancel</button>
+                <button id="deleteConfirm" class="btn btn-danger">Delete</button>
               </div>
             </div>
           </div>
@@ -49,7 +65,7 @@
   </div>
 
   <script src="assets/js/autocomplete.js"></script>
-  <script src="assets/js/new.js"></script>
+  <script type="module" src="assets/js/new.js"></script>
 </body>
 </html>
 
