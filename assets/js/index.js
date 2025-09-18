@@ -66,7 +66,7 @@ import {
     const printBtn = document.createElement('button');
     printBtn.className = 'btn export-btn-spacing';
     printBtn.type = 'button';
-    printBtn.textContent = 'Tlačiť';
+    printBtn.textContent = 'Tisknout';
     printBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
