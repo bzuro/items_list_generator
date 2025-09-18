@@ -9,9 +9,10 @@ body {
 }
 
 .app {
-  max-width: 50%;
+  max-width: 1200px;
   margin: 4rem auto;
   padding: 1.25rem;
+  width: 80%;
 }
 
 .card {
