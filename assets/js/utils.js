@@ -241,14 +241,13 @@ export function renderReadOnlyList(listElement, items, emptyMessage = 'No items.
 // ============================================================================
 
 /**
- * Generate and download a PDF for a list using pdfmake (supports UTF-8/diacritics)
+ * Generate PDF document definition for a list using pdfmake (supports UTF-8/diacritics)
  * @param {Object} listData - List data containing id, items, driverName, licensePlate, createdAt
- * @param {string} filename - Optional filename (defaults to List_{id}.pdf)
+ * @returns {Object} PDF document definition
  */
-export function generateListPDF(listData, filename = null) {
+export function generatePDFDoc(listData) {
   if (!window.pdfMake) { 
-    alert('PDF library not loaded'); 
-    return; 
+    throw new Error('PDF library not loaded'); 
   }
   
   // Configure pdfMake fonts for Czech/Slovak diacritics support
@@ -442,9 +441,47 @@ export function generateListPDF(listData, filename = null) {
     }
   };
 
-  // Generate and download the PDF
-  const pdfFilename = filename || `List_${listData.id}.pdf`;
-  window.pdfMake.createPdf(docDefinition).download(pdfFilename);
+  return docDefinition;
+}
+
+/**
+ * Download PDF for a list
+ * @param {Object} listData - List data containing id, items, driverName, licensePlate, createdAt
+ * @param {string} filename - Optional filename (defaults to List_{id}.pdf)
+ */
+export function PDFDownload(listData, filename = null) {
+  try {
+    const docDefinition = generatePDFDoc(listData);
+    const pdfFilename = filename || `List_${listData.id}.pdf`;
+    window.pdfMake.createPdf(docDefinition).download(pdfFilename);
+  } catch (error) {
+    alert('PDF download failed: ' + error.message);
+    console.error('PDF download error:', error);
+  }
+}
+
+/**
+ * Print PDF for a list by opening in new window
+ * @param {Object} listData - List data containing id, items, driverName, licensePlate, createdAt
+ */
+export function PDFPrint(listData) {
+  try {
+    const docDefinition = generatePDFDoc(listData);
+    window.pdfMake.createPdf(docDefinition).open();
+  } catch (error) {
+    alert('PDF print failed: ' + error.message);
+    console.error('PDF print error:', error);
+  }
+}
+
+/**
+ * Generate and download a PDF for a list using pdfmake (supports UTF-8/diacritics)
+ * @deprecated Use PDFDownload instead
+ * @param {Object} listData - List data containing id, items, driverName, licensePlate, createdAt
+ * @param {string} filename - Optional filename (defaults to List_{id}.pdf)
+ */
+export function generateListPDF(listData, filename = null) {
+  PDFDownload(listData, filename);
 }
 
 // ============================================================================

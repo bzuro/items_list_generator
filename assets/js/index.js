@@ -1,6 +1,7 @@
 import { 
   setupPageRefreshHandlers, 
-  generateListPDF, 
+  PDFDownload,
+  PDFPrint,
   formatDate,
   getAllLists
 } from './utils.js';
@@ -45,7 +46,7 @@ import {
     const exportBtn = document.createElement('button');
     exportBtn.className = 'btn export-btn-spacing';
     exportBtn.type = 'button';
-    exportBtn.textContent = 'Export';
+    exportBtn.textContent = 'Stáhnout';
     exportBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -54,9 +55,29 @@ import {
         if (!res.ok) throw new Error('Failed to load list');
         const data = await res.json();
         
-        generateListPDF(data, `List_${list.id}.pdf`);
+        PDFDownload(data, `List_${list.id}.pdf`);
       } catch (err) {
         alert('Export failed');
+        console.error(err);
+      }
+    });
+
+    // Print button
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn export-btn-spacing';
+    printBtn.type = 'button';
+    printBtn.textContent = 'Tlačiť';
+    printBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        const res = await fetch(`api/lists.php?id=${encodeURIComponent(list.id)}`);
+        if (!res.ok) throw new Error('Failed to load list');
+        const data = await res.json();
+        
+        PDFPrint(data);
+      } catch (err) {
+        alert('Print failed');
         console.error(err);
       }
     });
@@ -72,6 +93,7 @@ import {
     const actions = document.createElement('div');
     actions.className = 'actions';
     actions.appendChild(exportBtn);
+    actions.appendChild(printBtn);
     // actions.appendChild(editLink);
 
     const tdActions = document.createElement('td');

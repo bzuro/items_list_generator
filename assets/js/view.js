@@ -3,7 +3,8 @@ import {
   navigateTo, 
   setupPageRefreshHandlers, 
   createItemCountBadge, 
-  generateListPDF, 
+  PDFDownload,
+  PDFPrint,
   formatDate,
   getList,
   renderReadOnlyList
@@ -18,6 +19,7 @@ import {
   const metaEl = document.getElementById('meta');
 //   const editLink = document.getElementById('editLink');
   const exportBtn = document.getElementById('exportPdfBtn');
+  const printBtn = document.getElementById('printPdfBtn');
   const listHeader = document.querySelector('.list-header');
   const listTitleEl = document.getElementById('listTitle');
   const pageHeaderTitleEl = document.querySelector('.card-header .title');
@@ -103,11 +105,23 @@ import {
       alert('No data to export');
       return;
     }
-    generateListPDF(currentData, `List_${id}.pdf`);
+    PDFDownload(currentData, `List_${id}.pdf`);
+  }
+
+  /**
+   * Print current list as PDF
+   */
+  function printPdf() {
+    if (!currentData) {
+      alert('No data to print');
+      return;
+    }
+    PDFPrint(currentData);
   }
 
   // Event listeners
   exportBtn.addEventListener('click', exportPdf);
+  printBtn.addEventListener('click', printPdf);
   
   // Set up page refresh handlers using shared utility
   setupPageRefreshHandlers(load);

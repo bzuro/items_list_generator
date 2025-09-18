@@ -6,7 +6,8 @@ import {
   createList,
   navigateBack,
   renderItemsList,
-  generateListPDF,
+  PDFDownload,
+  PDFPrint,
   getNextListId
 } from './utils.js';
 
@@ -114,28 +115,41 @@ import {
       // Close modal first
       closeModal();
       
-      // Generate and download PDF immediately after saving
+      // Generate PDF for both download and print immediately after saving
       if (createdList && createdList.id) {
         // Wait for pdfMake to be available
         if (window.pdfMake) {
-          generateListPDF(createdList, `List_${createdList.id}.pdf`);
+          // Download the PDF
+          PDFDownload(createdList, `List_${createdList.id}.pdf`);
           
-          // Wait a moment for PDF generation before navigation
+          // Print the PDF (opens in new window)
+          setTimeout(() => {
+            PDFPrint(createdList);
+          }, 500); // Small delay to ensure download starts first
+          
+          // Wait a moment for PDF operations before navigation
           setTimeout(() => {
             storage.remove(STORAGE_KEY);
             navigateBack('index.html');
-          }, 300);
+          }, 1000);
         } else {
           // Wait a bit for pdfMake to load
           setTimeout(() => {
             if (window.pdfMake) {
-              generateListPDF(createdList, `List_${createdList.id}.pdf`);
+              // Download the PDF
+              PDFDownload(createdList, `List_${createdList.id}.pdf`);
+              
+              // Print the PDF (opens in new window)
+              setTimeout(() => {
+                PDFPrint(createdList);
+              }, 500);
+              
               setTimeout(() => {
                 storage.remove(STORAGE_KEY);
                 navigateBack('index.html');
-              }, 300);
+              }, 1000);
             } else {
-              console.warn('PDF library not available for auto-download');
+              console.warn('PDF library not available for auto-download/print');
               storage.remove(STORAGE_KEY);
               navigateBack('index.html');
             }

@@ -116,11 +116,11 @@ body {
 }
 
 /* Table column widths */
-#th-id { width: 12%; min-width: 80px; }
-#th-driver { width: 29%; min-width: 150px; }
-#th-spz { width: 13%; min-width: 80px; }
+#th-id { width: 10%; min-width: 80px; }
+#th-driver { width: 25%; min-width: 150px; }
+#th-spz { width: 12%; min-width: 80px; }
 #th-count { width: 8%; min-width: 70px; }
-#th-datetime { width: 21%; min-width: 140px; }
+#th-datetime { width: 20%; min-width: 140px; }
 
 /* Print area */
 #printArea {
