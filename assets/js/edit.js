@@ -79,9 +79,17 @@ import {
   async function load() {
     try {
       const data = await getList(id);
+      
+      // Update page titles with actual ID
+      document.title = `Uprav Přepravní Doklad ${id} (Ukončený)`;
+      const headerTitle = document.querySelector('.card-header .title');
+      if (headerTitle) {
+        headerTitle.textContent = `Uprav Přepravní Doklad ${id} (Ukončený)`;
+      }
+      
       originalItems = Array.isArray(data.items) ? [...data.items] : [];
       items = [...originalItems];
-      backLink.href = `list.html?id=${encodeURIComponent(id)}`;
+      backLink.href = `view.html?id=${encodeURIComponent(id)}`;
       
       if (driverNameInput && licensePlateInput) {
         driverNameInput.value = data.driverName || '';
@@ -116,7 +124,7 @@ import {
 
     try {
       await updateList(id, payload);
-      navigateBack(`list.html?id=${encodeURIComponent(id)}`);
+      navigateBack(`view.html?id=${encodeURIComponent(id)}`);
     } catch (error) {
       alert('Failed to save');
     }
@@ -134,7 +142,7 @@ import {
   if (backLink) {
     backLink.addEventListener('click', (e) => {
       e.preventDefault();
-      navigateBack(`list.html?id=${encodeURIComponent(id)}`);
+      navigateBack(`view.html?id=${encodeURIComponent(id)}`);
     });
   }
 
@@ -157,7 +165,6 @@ import {
     try {
       window.AutocompleteManager.setup(driverNameInput, 'drivers');
       window.AutocompleteManager.setup(licensePlateInput, 'licensePlates');
-      console.log('Autocomplete setup complete for edit page');
     } catch (error) {
       console.error('Error setting up autocomplete:', error);
     }
@@ -167,4 +174,7 @@ import {
   setTimeout(initAutocomplete, 300);
   
   load();
+  
+  // Focus on input field when page loads
+  setTimeout(() => input.focus(), 100);
 })();

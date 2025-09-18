@@ -93,6 +93,19 @@ body {
 
 .hint { color: #667085; font-size: .9rem; margin-top: .5rem; }
 
+/* Input with inline hint layout */
+.input-hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-hint-row .hint {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+
 /* Table styling */
 .table {
   table-layout: fixed;
@@ -112,9 +125,9 @@ body {
 /* Print area */
 #printArea {
   background: #fff;
-  border: 1px solid #eef0f5;
-  border-radius: 10px;
-  padding: 1rem;
+  /* border: 1px solid #eef0f5; */
+  /* border-radius: 10px; */
+  /* padding: 1rem; */
 }
 
 .list-header {
@@ -122,17 +135,58 @@ body {
   align-items: baseline;
   justify-content: space-between;
   gap: .5rem;
-  border-bottom: 1px solid #eef0f5;
+  border-bottom: 1px solid #d6d8dd;
   padding-bottom: .5rem;
-  margin-bottom: .75rem;
+  margin-bottom: 1rem; /* 1rem distance to items list */
 }
 
 .list-title { font-size: 1.05rem; font-weight: 700; margin: 0; }
 
-ul.items { list-style: none; padding: 0; margin: 0; }
+ul.items { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+}
+
+/* Scrollable items list for view, edit, and new pages */
+.view-page ul.items,
+.edit-page ul.items,
+.new-page ul.items { 
+  max-height: 60vh; /* Limit height to 60% of viewport height */
+  overflow-y: auto; /* Enable vertical scrolling */
+  width: 100%; /* Full width of parent */
+  box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+/* Custom scrollbar styling for items list on view, edit, and new pages */
+.view-page ul.items::-webkit-scrollbar,
+.edit-page ul.items::-webkit-scrollbar,
+.new-page ul.items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.view-page ul.items::-webkit-scrollbar-track,
+.edit-page ul.items::-webkit-scrollbar-track,
+.new-page ul.items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.view-page ul.items::-webkit-scrollbar-thumb,
+.edit-page ul.items::-webkit-scrollbar-thumb,
+.new-page ul.items::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.view-page ul.items::-webkit-scrollbar-thumb:hover,
+.edit-page ul.items::-webkit-scrollbar-thumb:hover,
+.new-page ul.items::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 .item {
   display: block;
-  padding: .5rem .25rem;
+  padding: 0 1rem 0.5rem 1rem;
 }
 .text { white-space: pre-wrap; word-break: break-word; flex: 1; }
 
@@ -196,7 +250,7 @@ ul.items { list-style: none; padding: 0; margin: 0; }
   display: flex;
   gap: 1rem;
   align-items: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin: 0 0 1.5rem 0;
 }
 
@@ -207,19 +261,11 @@ ul.items { list-style: none; padding: 0; margin: 0; }
 }
 
 .form-field-wide {
-  min-width: 200px;
-  flex: 0 1 360px;
-  max-width: 360px;
+  min-width: 400px;
 }
 
-.form-field-medium {
-  min-width: 180px;
-  flex: 0 0 240px;
-}
-
-.form-field-narrow {
-  min-width: 140px;
-  flex: 0 0 160px;
+.form-field-extra-wide {
+  min-width: 600px;
 }
 
 .form-label {
@@ -229,6 +275,11 @@ ul.items { list-style: none; padding: 0; margin: 0; }
 
 .input-full {
   width: 100%;
+}
+
+.input-wide {
+  width: 100%;
+  max-width: 400px;
 }
 
 .input-medium {
@@ -304,9 +355,10 @@ ul.items { list-style: none; padding: 0; margin: 0; }
 .table-cell {
   padding: .5rem;
 }
-
+    
 .table-actions {
-  padding: .5rem;
+  padding: .5rem 0rem;
+  text-align: right;
 }
 
 .export-btn-spacing {
@@ -342,16 +394,19 @@ ul.items { list-style: none; padding: 0; margin: 0; }
 
 .metadata-container {
   display: flex;
-  gap: 4rem;
+  /* justify-content: space-between; */
+  gap: 5rem;
   align-items: center;
   flex-wrap: wrap;
   color: #000;
   margin: 0 0 1.5rem 0;
+  /* border-bottom: 1px solid #f1f1f1; */
 }
 
 .metadata-field {
   display: flex;
   align-items: center;
+  font-size: 1rem;
   gap: .5rem;
 }
 
@@ -386,9 +441,10 @@ ul.items { list-style: none; padding: 0; margin: 0; }
 }
 
 .actions-row {
-  margin-top: .75rem;
+  margin-top: 2rem; /* Increased margin from items list */
   display: flex;
   gap: .5rem;
+  justify-content: center;
 }
 
 .delete-btn {

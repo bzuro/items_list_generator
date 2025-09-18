@@ -130,7 +130,7 @@ items_list_generator/
 │   └── schema.sql
 ├── edit.html
 ├── index.html
-├── list.html
+├── view.html
 ├── new.html
 └── MYSQL_SETUP.md
 ```

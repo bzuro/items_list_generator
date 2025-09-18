@@ -5,7 +5,9 @@ import {
   storage,
   createList,
   navigateBack,
-  renderItemsList
+  renderItemsList,
+  generateListPDF,
+  getNextListId
 } from './utils.js';
 
 (function() {
@@ -102,16 +104,70 @@ import {
     let items = loadTemp();
     items = Array.from(new Set(items)); // Remove duplicates
     if (!items.length) { 
-      alert('No items to save.'); 
+      alert('Žádné položky k uložení.'); 
       return; 
     }
     
     try {
-      await createList({ items, driverName, licensePlate });
-      storage.remove(STORAGE_KEY);
-      navigateBack('index.html');
+      const createdList = await createList({ items, driverName, licensePlate });
+      
+      // Close modal first
+      closeModal();
+      
+      // Generate and download PDF immediately after saving
+      if (createdList && createdList.id) {
+        // Wait for pdfMake to be available
+        if (window.pdfMake) {
+          generateListPDF(createdList, `List_${createdList.id}.pdf`);
+          
+          // Wait a moment for PDF generation before navigation
+          setTimeout(() => {
+            storage.remove(STORAGE_KEY);
+            navigateBack('index.html');
+          }, 300);
+        } else {
+          // Wait a bit for pdfMake to load
+          setTimeout(() => {
+            if (window.pdfMake) {
+              generateListPDF(createdList, `List_${createdList.id}.pdf`);
+              setTimeout(() => {
+                storage.remove(STORAGE_KEY);
+                navigateBack('index.html');
+              }, 300);
+            } else {
+              console.warn('PDF library not available for auto-download');
+              storage.remove(STORAGE_KEY);
+              navigateBack('index.html');
+            }
+          }, 500);
+        }
+      } else {
+        storage.remove(STORAGE_KEY);
+        navigateBack('index.html');
+      }
     } catch (error) {
-      alert('Failed to save');
+      alert('Chyba při ukládání.');
+    }
+  }
+
+  /**
+   * Load and display the next list ID in page titles
+   */
+  async function loadNextId() {
+    try {
+      const nextId = await getNextListId();
+      
+      // Update page title
+      document.title = `Přepravní Doklad ${nextId}`;
+      
+      // Update header title
+      const headerTitle = document.querySelector('.card-header .title');
+      if (headerTitle) {
+        headerTitle.textContent = `Přepravní Doklad ${nextId} (Neukončený)`;
+      }
+    } catch (error) {
+      console.error('Failed to load next ID:', error);
+      // Keep default titles if loading fails
     }
   }
 
@@ -122,12 +178,36 @@ import {
   finishBtn.addEventListener('click', openModal);
   modalSubmit.addEventListener('click', submitMeta);
   modalCancel.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-  modalDriverName.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
-  modalLicensePlate.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitMeta(); } });
+  modal.addEventListener('mousedown', (e) => { if (e.target === modal) closeModal(); });
+  modalDriverName.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter') { 
+      // Check if autocomplete dropdown is visible and let it handle the event
+      const autocompleteInstance = window.AutocompleteManager.instances.get(modalDriverName);
+      if (autocompleteInstance && autocompleteInstance.isVisible) {
+        return; // Let autocomplete handle the Enter key
+      }
+      e.preventDefault(); 
+      submitMeta(); 
+    } 
+  });
+  modalLicensePlate.addEventListener('keydown', (e) => { 
+    if (e.key === 'Enter') { 
+      // Check if autocomplete dropdown is visible and let it handle the event
+      const autocompleteInstance = window.AutocompleteManager.instances.get(modalLicensePlate);
+      if (autocompleteInstance && autocompleteInstance.isVisible) {
+        return; // Let autocomplete handle the Enter key
+      }
+      e.preventDefault(); 
+      submitMeta(); 
+    } 
+  });
 
-  // Initialize with temporary items
+  // Initialize
+  loadNextId();
   render(loadTemp());
+  
+  // Focus on input field when page loads
+  input.focus();
 })();
 
 

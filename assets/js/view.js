@@ -16,7 +16,7 @@ import {
   // DOM elements
   const itemsEl = document.getElementById('items');
   const metaEl = document.getElementById('meta');
-  const editLink = document.getElementById('editLink');
+//   const editLink = document.getElementById('editLink');
   const exportBtn = document.getElementById('exportPdfBtn');
   const listHeader = document.querySelector('.list-header');
   const listTitleEl = document.getElementById('listTitle');
@@ -40,10 +40,15 @@ import {
       // Set page title
       const seqName = String(data.id || '');
       if (pageHeaderTitleEl) {
-        pageHeaderTitleEl.textContent = seqName ? `ID: ${seqName}` : 'ID';
+        pageHeaderTitleEl.textContent = seqName ? `Přepravní Doklad ${seqName} (Ukončený)` : 'Přepravní Doklad (Ukončený)';
+      }
+      
+      // Update document title as well
+      if (seqName) {
+        document.title = `Přepravní Doklad ${seqName}`;
       }
       if (listTitleEl) {
-        listTitleEl.textContent = 'Items';
+        listTitleEl.textContent = 'Položky k odeslání';
       }
       
       currentData = data;
@@ -56,7 +61,7 @@ import {
       metaEl.innerHTML = `
     <div class="metadata-container">
       <div class="metadata-field metadata-field-wide">
-        <span class="metadata-label">Driver:</span>
+        <span class="metadata-label">Řidič:</span>
         <span class="metadata-value">${driver || '-'}</span>
       </div>
 
@@ -66,12 +71,12 @@ import {
       </div>
 
       <div class="metadata-field metadata-field-large">
-        <span class="metadata-label">Date:</span>
+        <span class="metadata-label">Dátum:</span>
         <span class="metadata-value">${created}</span>
       </div>
     </div>
   `;
-      editLink.href = `edit.html?id=${encodeURIComponent(id)}`;
+    //   editLink.href = `edit.html?id=${encodeURIComponent(id)}`;
       
       // Add count badge using shared utility
       if (listHeader) {

@@ -22,7 +22,7 @@ import {
     const tr = document.createElement('tr');
     tr.className = 'table-row';
     tr.addEventListener('click', () => { 
-      window.location.href = `list.html?id=${encodeURIComponent(list.id)}`; 
+      window.location.href = `view.html?id=${encodeURIComponent(list.id)}`; 
     });
     
     // Create table cells
@@ -62,17 +62,17 @@ import {
     });
 
     // Edit link
-    const editLink = document.createElement('a');
-    editLink.className = 'btn';
-    editLink.href = `edit.html?id=${encodeURIComponent(list.id)}`;
-    editLink.textContent = 'Edit';
-    editLink.addEventListener('click', (e) => { e.stopPropagation(); });
+    // const editLink = document.createElement('a');
+    // editLink.className = 'btn';
+    // editLink.href = `edit.html?id=${encodeURIComponent(list.id)}`;
+    // editLink.textContent = 'Edit';
+    // editLink.addEventListener('click', (e) => { e.stopPropagation(); });
 
     // Actions container
     const actions = document.createElement('div');
     actions.className = 'actions';
     actions.appendChild(exportBtn);
-    actions.appendChild(editLink);
+    // actions.appendChild(editLink);
 
     const tdActions = document.createElement('td');
     tdActions.className = 'table-actions';
